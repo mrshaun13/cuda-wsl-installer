@@ -204,6 +204,15 @@ GPU version first, then repeat with `CUDA_VISIBLE_DEVICES=` (empty) or
 * **Custom GPU thresholds:** Edit `scripts/install_cuda.sh` to adjust the
   capability cutoff or add new tracks (e.g., future CUDA versions).
 
+## Known issues
+
+* **WSL shim segfaults (`/usr/lib/wsl/lib/libcuda.so.1 --version` exits 139)** —
+  Microsoft is tracking this in [microsoft/WSL#13773](https://github.com/microsoft/WSL/issues/13773).
+  Until a fixed driver/wslg build lands, run `scripts/diagnostics/gpu_wsl_diag.sh`
+  to capture logs before opening support tickets with Microsoft/NVIDIA. The
+  script collects `nvidia-smi`, `dmesg`, `strace`, and TensorFlow visibility
+  data so you can attach it to bug reports.
+
 ## Next steps
 
 * Extend the matrix for additional GPU tiers (Hopper, etc.)
