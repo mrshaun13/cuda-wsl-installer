@@ -32,9 +32,16 @@ log_error() {
 # Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VENV_DIR="$SCRIPT_DIR/.cuda-wsl-bench-venv"
-CUDA_VERSION="12.5"
-PYTORCH_CUDA_SUFFIX="cu124"  # For CUDA 12.4+, compatible with 12.5
 DRY_RUN=false
+
+# Detect if GPU is available
+if command -v nvidia-smi &> /dev/null; then
+    USE_GPU=true
+    log_info "GPU detected"
+else
+    USE_GPU=false
+    log_warning "No GPU detected, will use CPU-only mode"
+fi
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -68,161 +75,6 @@ run_cmd() {
         log_info "Running: $@"
         "$@"
     fi
-}
-
-# Detect GPU and CUDA capability
-detect_gpu() {
-    log_info "Detecting GPU and CUDA capability..."
-
-    if ! command -v nvidia-smi &> /dev/null; then
-        log_error "nvidia-smi not found. Ensure NVIDIA drivers are installed."
-        USE_GPU=false
-        return
-    fi
-
-    GPU_INFO=$(nvidia-smi --query-gpu=name,compute_cap --format=csv,noheader,nounits 2>/dev/null || echo "Unknown GPU")
-    log_info "GPU Info: $GPU_INFO"
-
-    # Extract compute capability (e.g., 6.1 for GTX 1080 Ti)
-    COMPUTE_CAP=$(echo "$GPU_INFO" | grep -oP '\d+\.\d+' | head -1 || echo "unknown")
-
-    if [ "$COMPUTE_CAP" = "unknown" ]; then
-        log_warning "Could not determine compute capability. Assuming CPU-only."
-        USE_GPU=false
-    else
-        log_info "Compute capability: $COMPUTE_CAP"
-        USE_GPU=true
-        # Map compute capability to CUDA version
-        case $COMPUTE_CAP in
-            6.*|7.*|8.*)
-                REQUIRED_CUDA="11.0"
-                ;;
-            *)
-                REQUIRED_CUDA="12.0"
-                ;;
-        esac
-        log_info "Required CUDA version for this GPU: $REQUIRED_CUDA"
-    fi
-}
-
-# Check if CUDA is installed
-check_cuda() {
-    log_info "Checking CUDA installation..."
-
-    if command -v nvcc &> /dev/null; then
-        NVCC_VERSION=$(nvcc --version | grep "release" | sed -n -e 's/^.*release \([0-9]\+\.[0-9]\+\).*$/\1/p')
-        log_info "CUDA version detected: $NVCC_VERSION"
-        if [[ "$NVCC_VERSION" == "$REQUIRED_CUDA"* ]]; then
-            log_success "CUDA $REQUIRED_CUDA already installed."
-            CUDA_INSTALLED=true
-        else
-            log_warning "CUDA $NVCC_VERSION detected, but need $REQUIRED_CUDA for this GPU. Will install."
-            CUDA_INSTALLED=false
-        fi
-    else
-        log_warning "CUDA not detected. Will install $REQUIRED_CUDA."
-        CUDA_INSTALLED=false
-    fi
-}
-
-# Install CUDA
-install_cuda() {
-    if [ "$CUDA_INSTALLED" = true ]; then
-        return
-    fi
-
-    log_info "Installing CUDA $REQUIRED_CUDA..."
-
-    # Add NVIDIA repository
-    run_cmd wget https://developer.download.nvidia.com/compute/cuda/repos/wsl-ubuntu/x86_64/cuda-keyring_1.1-1_all.deb
-    run_cmd sudo dpkg -i cuda-keyring_1.1-1_all.deb
-    run_cmd sudo apt-get update
-
-    # Install CUDA toolkit
-    run_cmd sudo apt-get install -y cuda-toolkit-$REQUIRED_CUDA
-
-    # Add to PATH
-    export PATH=/usr/local/cuda-$REQUIRED_CUDA/bin${PATH:+:${PATH}}
-    export LD_LIBRARY_PATH=/usr/local/cuda-$REQUIRED_CUDA/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
-
-    log_success "CUDA $REQUIRED_CUDA installed."
-}
-
-# Setup Python virtual environment
-setup_venv() {
-    log_info "Setting up Python virtual environment..."
-
-    if [ ! -d "$VENV_DIR" ]; then
-        run_cmd python3 -m venv "$VENV_DIR"
-    else
-        log_info "Virtual environment already exists."
-    fi
-
-    # Activate venv (skip in dry-run)
-    if [ "$DRY_RUN" != true ]; then
-        source "$VENV_DIR/bin/activate"
-    fi
-
-    log_success "Virtual environment ready."
-}
-
-# Install Python packages
-install_packages() {
-    log_info "Installing Python packages..."
-
-    if [ "$DRY_RUN" != true ]; then
-        source "$VENV_DIR/bin/activate"
-    fi
-
-    # Install PyTorch with CUDA
-    if [ "$USE_GPU" = true ]; then
-        run_cmd pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/$PYTORCH_CUDA_SUFFIX
-    else
-        run_cmd pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
-    fi
-
-    # Install other packages
-    run_cmd pip install tensorflow[and-cuda] pandas cudf-cu12 cupy-cuda12x loguru
-
-    # Setup logging
-    if [ "$DRY_RUN" != true ]; then
-        python3 -c "
-import loguru
-from loguru import logger
-logger.add('install.log', rotation='10 MB', level='INFO')
-logger.info('Install script started')
-"
-    fi
-
-    log_success "Python packages installed."
-}
-
-# Run benchmarks
-run_benchmarks() {
-    log_info "Running benchmarks..."
-
-    if [ "$DRY_RUN" != true ]; then
-        source "$VENV_DIR/bin/activate"
-    fi
-
-    # Run PyTorch benchmark
-    DEVICE_PYTORCH=${USE_GPU:+cuda:0}
-    DEVICE_PYTORCH=${DEVICE_PYTORCH:-cpu}
-    run_cmd python3 scripts/benchmarks/run_pytorch_matmul.py --device $DEVICE_PYTORCH
-
-    # Run TensorFlow benchmark
-    DEVICE_TF=${USE_GPU:+GPU}
-    DEVICE_TF=${DEVICE_TF:-CPU}
-    run_cmd python3 scripts/benchmarks/run_tensorflow_cnn.py --device $DEVICE_TF
-
-    # Run cuDF benchmark (only if GPU)
-    if [ "$USE_GPU" = true ]; then
-        run_cmd python3 scripts/benchmarks/run_cudf_groupby.py --device gpu
-    else
-        log_info "Skipping cuDF benchmark (CPU-only mode)."
-    fi
-
-    log_success "Benchmarks completed."
 }
 
 # Generate leaderboard
@@ -317,57 +169,42 @@ else:
 main() {
     log_info "Starting CUDA WSL Installer v1.0"
 
-    # Detect GPU (non-fatal)
-    if ! detect_gpu; then
-        log_warning "GPU detection failed, falling back to CPU-only mode"
-        USE_GPU=false
-    fi
-
-    # Check CUDA (non-fatal if GPU not detected)
-    if ! check_cuda; then
-        if [ "$USE_GPU" = true ]; then
-            log_warning "CUDA check failed, will attempt install"
-        fi
-    fi
-
-    # Install CUDA (fatal if GPU detected but install fails)
-    if ! install_cuda; then
-        if [ "$USE_GPU" = true ]; then
-            log_error "CUDA installation failed. Falling back to CPU-only mode."
-            USE_GPU=false
-        fi
-    fi
-
-    # Setup venv (fatal)
-    if ! setup_venv; then
-        log_error "Virtual environment setup failed. Exiting."
+    # Install CUDA
+    if ! python3 scripts/cuda_install.py; then
+        log_error "CUDA installation failed. Exiting."
         exit 1
     fi
 
-    # Install packages (fatal)
-    if ! install_packages; then
-        log_error "Package installation failed. Exiting."
+    # Setup environment
+    if ! python3 scripts/env_setup.py --venv-path "$VENV_DIR" --gpu $USE_GPU; then
+        log_error "Environment setup failed. Exiting."
         exit 1
     fi
 
-    # Health check (fatal)
+    # Activate venv for subsequent operations
+    if [ "$DRY_RUN" != true ]; then
+        source "$VENV_DIR/bin/activate"
+        VENV_PYTHON="$VENV_DIR/bin/python3"
+    fi
+
+    # Health checks
     if ! health_check; then
         log_error "Health checks failed. Exiting."
         exit 1
     fi
 
-    # Run benchmarks (non-fatal, with fallback)
-    if ! run_benchmarks; then
+    # Run benchmarks
+    if ! python3 scripts/benchmark_runner.py --gpu $USE_GPU --venv-python "$VENV_PYTHON" --skip-leaderboard; then
         log_warning "Some benchmarks failed, but continuing..."
     fi
 
-    # Generate leaderboard (non-fatal)
+    # Generate leaderboard
     if ! generate_leaderboard; then
         log_warning "Leaderboard generation failed, but install is complete"
     fi
 
     log_success "Installation complete! Leaderboard available at: results/LEADERBOARD.md"
-    log_info "To rerun benchmarks: source $VENV_DIR/bin/activate && python3 run_all_benchmarks.py"
+    log_info "To rerun benchmarks: source $VENV_DIR/bin/activate && python3 scripts/benchmark_runner.py --gpu $USE_GPU"
 }
 
 # Run main

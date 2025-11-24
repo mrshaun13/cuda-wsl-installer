@@ -5,6 +5,8 @@ from __future__ import annotations
 
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # Suppress TensorFlow warnings
+# Set XLA flag to allow fallback algorithms for cuDNN issues on older GPUs
+os.environ['XLA_FLAGS'] = '--xla_gpu_strict_conv_algorithm_picker=false'
 
 import argparse
 import json
@@ -98,11 +100,33 @@ def run_benchmark() -> dict:
 
 
 def main() -> None:
-    result = run_benchmark()
-    print(
-        f"[benchmark] tf_cnn device={result['device']} epochs={result['epochs']} "
-        f"time={result['seconds']:.2f}s"
-    )
+    try:
+        result = run_benchmark()
+        print(
+            f"[benchmark] tf_cnn device={result['device']} epochs={result['epochs']} "
+            f"time={result['seconds']:.2f}s"
+        )
+    except Exception as e:
+        error_msg = str(e)
+        if "cuda" in error_msg.lower() or "cudnn" in error_msg.lower() or "gpu" in error_msg.lower():
+            print(f"[warning] CUDA/GPU error detected: {error_msg}")
+            print("[info] Falling back to CPU...")
+            # Temporarily change device to cpu
+            original_device = ARGS.device
+            ARGS.device = "cpu"
+            try:
+                result = run_benchmark()
+                print(
+                    f"[benchmark] tf_cnn device={result['device']} epochs={result['epochs']} "
+                    f"time={result['seconds']:.2f}s (CPU fallback)"
+                )
+            except Exception as e2:
+                print(f"[error] CPU fallback also failed: {e2}")
+                return
+        else:
+            print(f"[error] Unexpected error: {error_msg}")
+            return
+
     if ARGS.result_file:
         ARGS.result_file.parent.mkdir(parents=True, exist_ok=True)
         ARGS.result_file.write_text(json.dumps(result, indent=2))

@@ -63,7 +63,17 @@ def main() -> None:
     if args.device == "cpu":
         duration = run_cpu(args.rows)
     else:
-        duration = run_gpu(args.rows)
+        try:
+            duration = run_gpu(args.rows)
+        except Exception as e:
+            error_msg = str(e)
+            if "cuda" in error_msg.lower() or "kernel" in error_msg.lower() or "gpu" in error_msg.lower():
+                print(f"[warning] CUDA/GPU error detected: {error_msg}")
+                print("[info] Falling back to pandas CPU...")
+                args.device = "cpu"
+                duration = run_cpu(args.rows)
+            else:
+                raise  # Re-raise if not CUDA-related
 
     payload = {
         "device": args.device,

@@ -308,8 +308,161 @@ Each run automatically:
   script collects `nvidia-smi`, `dmesg`, `strace`, and TensorFlow visibility
   data so you can attach it to bug reports.
 
-## Next steps
+## Advanced Usage
 
-* Extend the matrix for additional GPU tiers (Hopper, etc.)
-* Add CI smoke tests using WSL containers once available
-* Package the script as a deb/rpm for centralized IT deployments
+### Manual Component Installation
+
+If you need to run components separately:
+
+```bash
+# Install CUDA only
+python3 scripts/cuda_install.py
+
+# Setup environment only
+python3 scripts/env_setup.py --venv-path .my-venv --gpu
+
+# Run benchmarks only
+python3 scripts/benchmark_runner.py --gpu --venv-python .my-venv/bin/python3
+```
+
+### Environment Variables
+
+- `XLA_FLAGS=--xla_gpu_strict_conv_algorithm_picker=false`: Fixes TensorFlow cuDNN issues on older GPUs
+- `TF_CPP_MIN_LOG_LEVEL=3`: Suppresses TensorFlow warnings
+
+### Benchmark Details
+
+- **PyTorch MatMul**: 2048x2048 matrix multiplication, 10 runs average
+- **TensorFlow CNN**: MNIST CNN training for 1 epoch
+- **cuDF GroupBy**: 1M row DataFrame groupby operation
+
+All benchmarks include GPU/CPU fallback and leaderboard integration.
+
+## API Documentation
+
+### cuda_install.py
+
+Handles CUDA toolkit installation based on GPU detection.
+
+```python
+from scripts.cuda_install import detect_gpu, install_cuda
+
+gpu_available, compute_cap = detect_gpu()
+if gpu_available:
+    install_cuda()  # Installs appropriate CUDA version
+```
+
+### env_setup.py
+
+Manages Python virtual environment and package installation.
+
+```python
+from scripts.env_setup import setup_venv, install_packages
+
+venv_path = setup_venv('.venv')
+install_packages(use_gpu=True)  # Installs PyTorch, TF, cuDF, etc.
+```
+
+### benchmark_runner.py
+
+Orchestrates benchmark execution with error handling.
+
+```python
+from scripts.benchmark_runner import run_all_benchmarks
+
+results = run_all_benchmarks(use_gpu=True)
+# Returns dict with success status for each benchmark
+```
+
+## Troubleshooting
+
+### Common Issues
+
+**"nvidia-smi not found"**
+- Ensure NVIDIA drivers are installed in Windows
+- Verify WSL2 GPU passthrough: `wsl --update && wsl --shutdown`
+
+**CUDA installation fails**
+- Check internet connection
+- Ensure sudo privileges
+- Remove conflicting packages: `sudo apt-get remove cuda* nvidia*`
+
+**Benchmark failures**
+- PyTorch: Usually works on all CUDA versions
+- TensorFlow: May fail on Pascal GPUs (sm_61); falls back to CPU
+- cuDF: Requires Ampere+ GPUs; falls back to pandas CPU
+
+**Virtual environment issues**
+- Delete and recreate: `rm -rf .cuda-wsl-bench-venv && python3 scripts/env_setup.py`
+- Ensure Python 3.8+ is available
+
+### Debug Mode
+
+Run with verbose logging:
+```bash
+export PYTHONPATH=$PYTHONPATH:$(pwd)
+python3 -c "import logging; logging.basicConfig(level=logging.DEBUG); import scripts.cuda_install; scripts.cuda_install.main()"
+```
+
+### Logs
+
+Check `install.log` for detailed execution logs.
+
+## Development
+
+### Adding New Benchmarks
+
+1. Create script in `scripts/benchmarks/`
+2. Add leaderboard integration (see existing scripts)
+3. Update `benchmark_runner.py` to include new benchmark
+4. Test with both GPU and CPU
+
+### Code Structure
+
+```
+├── install.sh              # Main installer script
+├── scripts/
+│   ├── cuda_install.py     # CUDA detection/installation
+│   ├── env_setup.py        # Environment setup
+│   └── benchmark_runner.py # Benchmark orchestration
+├── scripts/benchmarks/     # Individual benchmark scripts
+├── results/                # Leaderboards and outputs
+└── tests/                  # Unit tests
+```
+
+### Testing
+
+Run unit tests:
+```bash
+python3 -m pytest tests/
+```
+
+Run CI locally:
+```bash
+act -j test-install
+act -j test-benchmarks
+```
+
+## Performance Expectations
+
+### GTX 1080 Ti (sm_61) Results
+
+- **PyTorch MatMul**: ~0.002s (GPU), ~0.5s (CPU)
+- **TensorFlow CNN**: Fails GPU (fallback to CPU), ~45s (CPU)
+- **cuDF GroupBy**: Fails GPU (fallback to pandas), ~2.5s (CPU)
+
+Results vary by hardware. Submit PRs to add your scores!
+
+## License
+
+MIT License - see LICENSE file.
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Add tests for new functionality
+4. Ensure CI passes
+5. Submit a pull request
+
+Contributions welcome! 🎉

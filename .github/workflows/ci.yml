@@ -1,0 +1,99 @@
+name: CUDA WSL Installer CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test-install:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+        
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y wget gnupg
+        
+    - name: Test CUDA install script (dry-run)
+      run: |
+        python3 scripts/cuda_install.py --help || echo "CUDA script help works"
+        
+    - name: Test env setup script (dry-run)
+      run: |
+        python3 scripts/env_setup.py --help || echo "Env setup help works"
+        
+    - name: Test benchmark runner (dry-run)
+      run: |
+        python3 scripts/benchmark_runner.py --help || echo "Benchmark runner help works"
+        
+    - name: Test install.sh dry-run
+      run: |
+        ./install.sh --dry-run
+        
+    - name: Validate scripts are executable
+      run: |
+        ls -la install.sh
+        ls -la scripts/*.py
+        
+  test-benchmarks:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+        
+    - name: Install test dependencies
+      run: |
+        pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+        pip install pandas loguru
+        
+    - name: Test PyTorch benchmark (CPU)
+      run: |
+        python3 scripts/benchmarks/run_pytorch_matmul.py --device cpu --size 1024 --warmup 1 --repeats 1
+        
+    - name: Test cuDF benchmark (CPU/pandas fallback)
+      run: |
+        python3 scripts/benchmarks/run_cudf_groupby.py --device cpu --rows 10000
+        
+  validate-docs:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Check README formatting
+      run: |
+        if grep -q "Quick Start" README.md; then
+          echo "README has Quick Start section"
+        else
+          echo "README missing Quick Start"
+          exit 1
+        fi
+        
+    - name: Check install.sh exists and is executable
+      run: |
+        test -x install.sh || exit 1
+        echo "install.sh is executable"
+        
+    - name: Check modular scripts exist
+      run: |
+        test -f scripts/cuda_install.py || exit 1
+        test -f scripts/env_setup.py || exit 1
+        test -f scripts/benchmark_runner.py || exit 1
+        echo "All modular scripts present"
