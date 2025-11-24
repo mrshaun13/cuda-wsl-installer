@@ -19,8 +19,8 @@ def generate_markdown_leaderboard():
 ║   PHREAKERS & HACKERZ CUDA WSL LEADERBOARD - BBS 1985 STYLE!   ║
 ║   Scoring: Lower times = BETTER! (CUDA vs CPU battles, fastest wins!) ║
 ═══════════════════════════════════════════════════════════════
-║ Rank │ Handle              │ Benchmark             │ Device │ Score      │ Status ║
-╠══════╬═════════════════════╬══════════════════════╬════════╬════════════╬════════╣
+║ Rank │ Handle              │ Benchmark             │ Device │ Score      │ Delta      │ Status ║
+╠══════╬═════════════════════╬══════════════════════╬════════╬════════════╬════════════╬════════╣
 ```
 
 **Separate Leaderboards for Each Benchmark Type**
@@ -33,15 +33,21 @@ def generate_markdown_leaderboard():
             with open(leaderboard_file, 'r') as f:
                 scores = json.load(f)
             full_md += f"## {bench.replace('_', ' ').title()} Leaderboard\n\n"
-            full_md += "| Rank | Handle | Benchmark | Device | Score | Status |\n|------|--------|-----------|--------|-------|--------|\n"
+            full_md += "| Rank | Handle | Benchmark | Device | Score | Delta (s) | Status |\n|------|--------|-----------|--------|-------|-----------|--------|\n"
             for i, score in enumerate(scores[:10]):
                 rank = f"{i+1}"
                 handle = score.get('handle', 'Anonymous')
                 benchmark = score['benchmark']
                 device_type = 'GPU' if not benchmark.endswith('_cpu') else 'CPU'
                 time_score = f"{score['score']:.4f}s" if 'score' in score else 'DNF'
+                # Calculate delta to next
+                if i < len(scores) - 1:
+                    next_score = scores[i+1]['score']
+                    delta = f"{next_score - score['score']:.4f}"
+                else:
+                    delta = "-"
                 status = score.get('status', 'UNKNOWN!')
-                full_md += f"| {rank} | {handle} | {benchmark} | {device_type} | {time_score} | {status} |\n"
+                full_md += f"| {rank} | {handle} | {benchmark} | {device_type} | {time_score} | {delta} | {status} |\n"
             
             full_md += "\n### System Specs for Top Scores\n"
             for i, score in enumerate(scores[:5]):
