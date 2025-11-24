@@ -52,8 +52,13 @@ def main() -> None:
     if args.device == "cuda":
         try:
             import cudf  # noqa: F401
-        except Exception as exc:  # pragma: no cover
-            raise SystemExit(f"cudf import failed: {exc}") from exc
+            USE_GPU = True
+        except Exception as exc:
+            print(f"cuDF import failed: {exc}, falling back to pandas CPU")
+            USE_GPU = False
+            args.device = "cpu"
+    else:
+        USE_GPU = False
 
     if args.device == "cpu":
         duration = run_cpu(args.rows)

@@ -10,7 +10,6 @@ from pathlib import Path
 
 import torch
 
-
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Benchmark torch matmul on CPU/GPU")
     parser.add_argument(
@@ -43,6 +42,14 @@ def parse_args() -> argparse.Namespace:
         help="Optional JSON output path for recording results",
     )
     return parser.parse_args()
+
+
+ARGS = parse_args()
+
+# Check for CUDA availability, fallback to CPU if requested device is cuda but not available
+if ARGS.device == "cuda" and not torch.cuda.is_available():
+    print("CUDA requested but not available, falling back to CPU")
+    ARGS.device = "cpu"
 
 
 def ensure_device(device: str) -> torch.device:
