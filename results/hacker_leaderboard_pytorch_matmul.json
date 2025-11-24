@@ -1,5 +1,17 @@
 [
   {
+    "handle": "@Christopher Ryan",
+    "benchmark": "pytorch_matmul",
+    "score": 0.0021168213340085154,
+    "status": "ELITE HACKER!",
+    "cpu": "Intel(R) Core(TM) i7-7700K CPU @ 4.20GHz",
+    "gpu": "NVIDIA GeForce GTX 1080 Ti",
+    "cuda_version": "12.5",
+    "driver_version": "581.57",
+    "os": "Ubuntu 24.04.3 LTS",
+    "device": "cuda"
+  },
+  {
     "handle": "@ShaunRocks",
     "benchmark": "pytorch_matmul",
     "score": 0.03,
@@ -9,18 +21,6 @@
     "cuda_version": "13.0",
     "driver_version": "581.80",
     "os": "Ubuntu 22.04.3 LTS",
-    "device": "cuda"
-  },
-  {
-    "handle": "@Christopher Ryan",
-    "benchmark": "pytorch_matmul",
-    "score": 0.054,
-    "status": "PHREAKING IT!",
-    "cpu": "Intel(R) Core(TM) i7-7700K CPU @ 4.20GHz",
-    "gpu": "NVIDIA GeForce GTX 1080 Ti",
-    "cuda_version": "12.5",
-    "driver_version": "581.57",
-    "os": "Ubuntu 24.04.3 LTS",
     "device": "cuda"
   }
 ]
