@@ -79,9 +79,6 @@ detect_cuda_version() {
     else
       echo "cu121"
     fi
-  elif command -v nvidia-smi >/dev/null 2>&1; then
-    # Fallback: assume cu124 for compatibility
-    echo "cu124"
   else
     echo "cpu"
   fi
