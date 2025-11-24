@@ -124,7 +124,7 @@ System Specs for Top Scores (CPU vs GPU details):
             os_ = score.get('os', 'Unknown OS')
             cuda = score.get('cuda_version', 'Unknown CUDA')
             driver = score.get('driver_version', 'Unknown Driver')
-            device_type = 'GPU' if 'cuda' in benchmark.lower() else 'CPU'
+            device_type = score.get('device', 'cuda').upper()
             print(f"{rank}. {handle} - {benchmark} ({device_type}): CPU: {cpu} | GPU: {gpu} | OS: {os_} | CUDA: {cuda} | Driver: {driver}")
 
     # Append to shared leaderboard file
