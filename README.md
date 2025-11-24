@@ -278,8 +278,8 @@ Example output (simplified):
 ║   PHREAKERS & HACKERZ CUDA WSL LEADERBOARD - BBS 1985 STYLE!   ║
 ║   Scoring: Lower times = BETTER! (CUDA vs CPU battles, fastest wins!) ║
 ═══════════════════════════════════════════════════════════════
-║ Rank │ Handle              │ Benchmark             │ Score      │ Status ║
-╠══════╬═════════════════════╬══════════════════════╬════════════╬════════╣
+║ Rank │ Handle              │ Benchmark             │ Device │ Score      │ Delta      │ Faster      │ Status ║
+╠══════╬═════════════════════╬══════════════════════╬════════╬════════════╬════════════╬═════════════╬════════╣
 
 ## Pytorch Matmul Leaderboard
 
