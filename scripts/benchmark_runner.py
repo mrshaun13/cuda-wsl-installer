@@ -67,9 +67,9 @@ def run_tensorflow_benchmark(device, venv_python=None):
     # TensorFlow may fail on some GPUs, but try anyway
     return run_benchmark('run_tensorflow_cnn', device, venv_python)
 
-def run_cudf_benchmark(device, venv_python=None):
-    """Run cuDF groupby benchmark."""
-    return run_benchmark('run_cudf_groupby', device, venv_python)
+def run_cuda_samples_benchmark(device, venv_python=None):
+    """Run CUDA samples benchmark."""
+    return run_benchmark('run_cuda_samples', device, venv_python)
 
 def run_all_benchmarks(use_gpu=True, venv_python=None):
     """Run all benchmarks."""
@@ -90,6 +90,9 @@ def run_all_benchmarks(use_gpu=True, venv_python=None):
         results['cudf'] = run_cudf_benchmark(device, venv_python)
     else:
         results['cudf'] = run_cudf_benchmark('cpu', venv_python)
+    
+    # CUDA Samples (works on all GPUs)
+    results['cuda_samples'] = run_cuda_samples_benchmark(device, venv_python)
 
     successful = sum(results.values())
     total = len(results)

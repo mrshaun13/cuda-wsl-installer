@@ -58,6 +58,14 @@ WSL2 you can:
 5. **Run modern GenAI tooling locally** – Stable Diffusion pipelines, LLM
    fine-tuning, and other CUDA-dependent projects work seamlessly when WSL has
    GPU access.
+6. **Scientific computing and HPC** – NumPy with CuPy for GPU arrays, JAX for
+   composable transformations, OpenCV with CUDA for computer vision.
+7. **3D rendering and visualization** – Blender Cycles, ParaView, VTK with GPU
+   acceleration.
+8. **Molecular dynamics and simulations** – LAMMPS, GROMACS, NAMD with CUDA
+   for faster physics simulations.
+9. **Custom GPU kernels** – Numba CUDA for writing custom CUDA code in Python,
+   or direct CUDA C++ development.
 
 Installing CUDA in WSL means your Windows laptops/desktops act like Linux CUDA
 workstations without dual-booting, while still sharing the same NVIDIA driver
@@ -249,6 +257,7 @@ python3 scripts/benchmark_runner.py --gpu --venv-python .my-venv/bin/python3
 - **PyTorch MatMul**: 2048x2048 matrix multiplication, 10 runs average
 - **TensorFlow CNN**: MNIST CNN training for 1 epoch
 - **cuDF GroupBy**: 1M row DataFrame groupby operation
+- **CUDA Samples**: deviceQuery, matrixMul, nbody simulation (works on all GPUs)
 
 All benchmarks include GPU/CPU fallback and leaderboard integration.
 
