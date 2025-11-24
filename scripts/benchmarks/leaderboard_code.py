@@ -118,12 +118,3 @@ except:
 
 # Display the leaderboard
 print_hacker_leaderboard(scores)
-
-# Test with sample data
-if __name__ == "__main__":
-    sample_scores = [
-        {"handle": "@ShaunRocks", "benchmark": "pytorch_matmul", "score": 0.030, "status": "ELITE HACKER!", "cpu": "AMD Ryzen 9", "gpu": "RTX 4090", "os": "Ubuntu 22.04", "cuda_version": "12.2", "driver_version": "525.60"},
-        {"handle": "@ProvenGuilty", "benchmark": "pytorch_matmul", "score": 0.054, "status": "PHREAKING IT!", "cpu": "Intel i7", "gpu": "GTX 1080 Ti", "os": "Ubuntu 20.04", "cuda_version": "11.5", "driver_version": "470.42"}
-    ]
-    print("\n--- Test Leaderboard ---")
-    print_hacker_leaderboard(sample_scores)
