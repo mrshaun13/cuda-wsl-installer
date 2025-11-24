@@ -200,6 +200,17 @@ To participate in the community CUDA WSL benchmarks and contribute to the gamifi
 - Git configured with your GitHub handle (`git config user.name "YourGitHubUsername"`).
 
 ### Running Benchmarks
+You can run individual benchmarks for targeted testing or all benchmarks at once for a full leaderboard submission.
+
+**Option 1: Run All Benchmarks (Recommended for Leaderboard Submission)**
+```bash
+python run_all_benchmarks.py
+```
+This runs PyTorch matmul, TensorFlow CNN, and RAPIDS cuDF groupby on GPU, updates all leaderboards, and regenerates the markdown file.
+
+**Option 2: Run Individual Benchmarks**
+For focused improvement on a specific score, run each separately:
+
 1. **Set up the environment:**
    ```bash
    cd scripts/benchmarks
@@ -214,9 +225,17 @@ To participate in the community CUDA WSL benchmarks and contribute to the gamifi
    # or
    python run_pytorch_matmul.py --device cpu   # CPU run
    ```
-   Options: `--size 4096` (matrix size), `--warmup 5`, `--reps 10`.
+   Options: `--size 4096` (matrix size), `--warmup 5`, `--repeats 10`.
 
-3. **Run RAPIDS cuDF groupby benchmark:**
+3. **Run TensorFlow CNN benchmark:**
+   ```bash
+   python run_tensorflow_cnn.py --device cuda  # GPU run
+   # or
+   python run_tensorflow_cnn.py --device cpu   # CPU run
+   ```
+   Options: `--epochs 1`, `--batch_size 256`.
+
+4. **Run RAPIDS cuDF groupby benchmark:**
    ```bash
    python run_cudf_groupby.py --device cuda  # GPU run (requires RAPIDS)
    # or
@@ -258,6 +277,12 @@ System Specs for Top Scores (CPU vs GPU details):
 **View the live leaderboard on GitHub:** [results/LEADERBOARD.md](results/LEADERBOARD.md)
 
 Contribute by running benchmarks and submitting results via PRs—let's see who dominates the CUDA WSL arena! 🚀
+
+## How to Contribute Scores
+1. Fork this repo
+2. Run `python run_all_benchmarks.py` to test all benchmarks and update your scores
+3. Your scores auto-update `results/hacker_leaderboard_*.json` files
+4. Submit a PR with your results to add to the community leaderboard!
 
 * **`nvidia-smi` missing:** Install/repair the NVIDIA Windows driver, then
   restart WSL (`wsl --shutdown`).
