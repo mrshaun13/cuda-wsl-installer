@@ -123,10 +123,10 @@ def install_packages(use_gpu=True):
     ]
 
     if use_gpu and cuda_version.startswith('12'):
-        packages.append("cudf-cu12 cupy-cuda12x")
+        packages.append("cudf-cu12 cupy-cuda12x numba numba-cuda")
     elif use_gpu and cuda_version.startswith('13'):
         # For CUDA 13, use compatible versions or latest
-        packages.append("cudf-cu12 cupy-cuda12x")  # Assume compatible
+        packages.append("cudf-cu12 cupy-cuda12x numba numba-cuda")  # Assume compatible
 
     for package in packages:
         try:

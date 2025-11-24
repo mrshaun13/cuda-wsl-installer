@@ -24,10 +24,15 @@ def log_warning(msg):
 def log_error(msg):
     print(f"{RED}[ERROR]{NC} {msg}")
 
-def run_cmd(cmd, check=True):
+def run_cmd(cmd, check=True, shell=False):
     """Run shell command."""
-    log_info(f"Running: {cmd}")
-    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    if isinstance(cmd, str):
+        cmd_list = cmd if shell else cmd.split()
+    else:
+        cmd_list = cmd
+
+    log_info(f"Running: {' '.join(cmd_list) if isinstance(cmd_list, list) else cmd}")
+    result = subprocess.run(cmd_list, shell=shell, capture_output=True, text=True)
     if check and result.returncode != 0:
         log_error(f"Command failed: {cmd}")
         log_error(f"stdout: {result.stdout}")
@@ -41,47 +46,30 @@ def detect_gpu():
 
     # Check if nvidia-smi works
     try:
-        result = run_cmd("nvidia-smi --query-gpu=name,compute_cap --format=csv,noheader,nounits")
-        gpu_info = result.stdout.strip()
-        log_info(f"GPU Info: {gpu_info}")
+        result = run_cmd("nvidia-smi --list-gpus")
+        gpu_lines = result.stdout.strip().split('\n')
+        gpu_count = len([line for line in gpu_lines if line.strip()])
+        log_info(f"Found {gpu_count} GPU(s)")
     except subprocess.CalledProcessError:
-        log_error("nvidia-smi not found. Ensure NVIDIA drivers are installed.")
+        log_error("nvidia-smi not found or failed. No GPU support.")
         return False, None
 
-    # Extract compute capability
+    if gpu_count == 0:
+        log_warning("No GPUs detected")
+        return False, None
+
+    # Get compute capability from first GPU
     try:
-        compute_cap = gpu_info.split(',')[1].strip()
+        result = run_cmd("nvidia-smi --query-gpu=compute_cap --format=csv,noheader,nounits")
+        compute_cap = result.stdout.strip().split('\n')[0]
         major, minor = compute_cap.split('.')
         compute_cap = f"{major}.{minor}"
         log_info(f"Compute capability: {compute_cap}")
-    except (IndexError, ValueError):
-        log_warning("Could not determine compute capability.")
+    except (subprocess.CalledProcessError, IndexError, ValueError) as e:
+        log_warning(f"Could not determine compute capability: {e}")
         return True, None
 
     return True, compute_cap
-
-def check_cuda(required_version):
-    """Check if CUDA is installed."""
-    log_info("Checking CUDA installation...")
-
-    try:
-        result = run_cmd("nvcc --version")
-        # Extract version
-        for line in result.stdout.split('\n'):
-            if 'release' in line:
-                version = line.split('release ')[1].split(',')[0]
-                log_info(f"CUDA version detected: {version}")
-                if version.startswith(required_version):
-                    log_success(f"CUDA {required_version} already installed.")
-                    return True
-                else:
-                    log_warning(f"CUDA {version} detected, but need {required_version}.")
-                    return False
-    except subprocess.CalledProcessError:
-        pass
-
-    log_warning(f"CUDA not detected. Will install {required_version}.")
-    return False
 
 def get_required_cuda_version(compute_cap):
     """Map compute capability to CUDA version."""
@@ -119,25 +107,22 @@ def main():
     """Main installation logic."""
     log_info("Starting CUDA installation...")
 
-    # Detect GPU
     gpu_available, compute_cap = detect_gpu()
     if not gpu_available:
-        log_error("No GPU detected. Exiting.")
+        log_error("No GPU detected. Cannot install CUDA.")
         sys.exit(1)
 
     # Get required CUDA version
     required_cuda = get_required_cuda_version(compute_cap)
     log_info(f"Required CUDA version: {required_cuda}")
 
-    # Check/install CUDA
-    if not check_cuda(required_cuda):
-        try:
-            install_cuda(required_cuda)
-        except Exception as e:
-            log_error(f"CUDA installation failed: {e}")
-            sys.exit(1)
-
-    log_success("CUDA installation complete.")
+    # Install CUDA
+    try:
+        install_cuda(required_cuda)
+        log_success("CUDA installation complete.")
+    except Exception as e:
+        log_error(f"CUDA installation failed: {e}")
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()

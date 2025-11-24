@@ -1,79 +1,68 @@
 #!/usr/bin/env python3
-"""CUDA Samples benchmark for WSL."""
+"""CUDA kernel benchmark using Numba CUDA."""
 
-import subprocess
-import sys
 import time
-from pathlib import Path
+from numba import cuda
+import numpy as np
 
-def run_cuda_sample(sample_name, args=None):
-    """Run a CUDA sample and measure time."""
-    cuda_samples_path = "/usr/local/cuda/samples/bin/x86_64/linux/release"
-    sample_path = f"{cuda_samples_path}/{sample_name}"
+def run_numba_cuda_kernel():
+    """Run a simple CUDA kernel using Numba."""
     
-    if not Path(sample_path).exists():
-        raise FileNotFoundError(f"CUDA sample {sample_name} not found. Run install_cuda.sh with samples.")
+    @cuda.jit
+    def simple_kernel(arr):
+        """Simple CUDA kernel that squares array elements."""
+        i = cuda.grid(1)
+        if i < arr.size:
+            arr[i] = arr[i] * arr[i]
     
-    cmd = [sample_path]
-    if args:
-        cmd.extend(args)
+    # Create test data
+    n = 1000000
+    arr = np.random.random(n).astype(np.float32)
     
+    # Copy to device
+    d_arr = cuda.to_device(arr)
+    
+    # Configure kernel
+    threads_per_block = 256
+    blocks_per_grid = (n + threads_per_block - 1) // threads_per_block
+    
+    # Run kernel
     start = time.perf_counter()
-    result = subprocess.run(cmd, capture_output=True, text=True)
+    simple_kernel[blocks_per_grid, threads_per_block](d_arr)
+    cuda.synchronize()  # Wait for completion
     duration = time.perf_counter() - start
     
-    if result.returncode != 0:
-        raise RuntimeError(f"CUDA sample failed: {result.stderr}")
+    # Copy back result
+    result = d_arr.copy_to_host()
     
     return duration
 
-def benchmark_device_query():
-    """Benchmark deviceQuery sample."""
-    return run_cuda_sample("deviceQuery")
-
-def benchmark_matrix_mul():
-    """Benchmark matrix multiplication sample."""
-    return run_cuda_sample("matrixMul")
-
-def benchmark_nbody():
-    """Benchmark N-body simulation sample."""
-    return run_cuda_sample("nbody", ["-benchmark", "-numbodies=15360"])
+def benchmark_numba_cuda():
+    """Benchmark Numba CUDA kernel."""
+    return run_numba_cuda_kernel()
 
 def main():
-    """Run CUDA samples benchmarks."""
+    """Run CUDA kernel benchmarks."""
     import argparse
     
     parser = argparse.ArgumentParser()
-    parser.add_argument("--result-file", type=Path)
+    parser.add_argument("--result-file", type=str)
     args = parser.parse_args()
     
     results = {}
     
     try:
-        results["device_query"] = benchmark_device_query()
-        print(f"[benchmark] cuda_device_query time={results['device_query']:.3f}s")
+        duration = benchmark_numba_cuda()
+        print(f"[benchmark] cuda_kernel time={duration:.4f}s")
+        results["cuda_kernel"] = duration
     except Exception as e:
-        print(f"[warning] deviceQuery failed: {e}")
-        results["device_query"] = None
-    
-    try:
-        results["matrix_mul"] = benchmark_matrix_mul()
-        print(f"[benchmark] cuda_matrix_mul time={results['matrix_mul']:.3f}s")
-    except Exception as e:
-        print(f"[warning] matrixMul failed: {e}")
-        results["matrix_mul"] = None
-    
-    try:
-        results["nbody"] = benchmark_nbody()
-        print(f"[benchmark] cuda_nbody time={results['nbody']:.3f}s")
-    except Exception as e:
-        print(f"[warning] nbody failed: {e}")
-        results["nbody"] = None
+        print(f"[warning] CUDA kernel benchmark failed: {e}")
+        results["cuda_kernel"] = None
     
     if args.result_file:
         import json
-        args.result_file.parent.mkdir(parents=True, exist_ok=True)
-        args.result_file.write_text(json.dumps(results, indent=2))
+        with open(args.result_file, 'w') as f:
+            json.dump(results, f, indent=2)
 
 if __name__ == "__main__":
     main()

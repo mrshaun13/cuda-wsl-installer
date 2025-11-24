@@ -35,13 +35,23 @@ VENV_DIR="$SCRIPT_DIR/.cuda-wsl-bench-venv"
 DRY_RUN=false
 
 # Detect if GPU is available
-if command -v nvidia-smi &> /dev/null; then
-    USE_GPU=true
-    log_info "GPU detected"
-else
+detect_gpu() {
+    log_info "Detecting GPU availability..."
+    
+    if command -v nvidia-smi &> /dev/null; then
+        GPU_COUNT=$(nvidia-smi --list-gpus 2>/dev/null | wc -l)
+        if [ "$GPU_COUNT" -gt 0 ]; then
+            log_info "Found $GPU_COUNT GPU(s)"
+            USE_GPU=true
+            return 0
+        fi
+    fi
+    
+    log_warning "No NVIDIA GPUs detected. Will use CPU-only mode."
     USE_GPU=false
-    log_warning "No GPU detected, will use CPU-only mode"
-fi
+}
+
+detect_gpu
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -88,6 +98,24 @@ generate_leaderboard() {
     run_cmd python3 results/generate_leaderboard_md.py
 
     log_success "Leaderboard generated."
+}
+
+# Install CUDA
+install_cuda() {
+    if [ "$USE_GPU" = false ]; then
+        log_info "Skipping CUDA installation (CPU-only mode)"
+        return 0
+    fi
+
+    log_info "Installing CUDA..."
+
+    # Try to install CUDA, but don't fail the whole script
+    if python3 scripts/cuda_install.py; then
+        log_success "CUDA installation completed"
+    else
+        log_error "CUDA installation failed. Falling back to CPU-only mode."
+        USE_GPU=false
+    fi
 }
 
 # Health check
@@ -169,11 +197,8 @@ else:
 main() {
     log_info "Starting CUDA WSL Installer v1.0"
 
-    # Install CUDA
-    if ! python3 scripts/cuda_install.py; then
-        log_error "CUDA installation failed. Exiting."
-        exit 1
-    fi
+    # Install CUDA (now handles GPU detection internally)
+    install_cuda
 
     # Setup environment
     if ! python3 scripts/env_setup.py --venv-path "$VENV_DIR" --gpu $USE_GPU; then
