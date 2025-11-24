@@ -1,10 +1,29 @@
-# CUDA WSL Installer
+# CUDA WSL Benchmark Installer
 
 🏆 **[View the Community Leaderboard](results/LEADERBOARD.md)** - Run benchmarks, compare scores, and contribute via PRs!
 
-Automated CUDA installation scripts for Windows 11 developers using WSL2. The
-repository detects the GPU’s compute capability from inside WSL and installs
-the matching CUDA toolkit, samples, and developer prerequisites.
+Automated CUDA installation scripts for Windows 11 developers using WSL2 with integrated benchmarking and leaderboards.
+
+## Quick Start (1-Click Install)
+
+From a fresh Ubuntu WSL environment:
+
+```bash
+# Clone and run installer
+git clone https://github.com/<your-org>/cuda-wsl-installer.git
+cd cuda-wsl-installer
+./install.sh
+```
+
+That's it! The installer will:
+- Detect your GPU and compute capability
+- Install the correct CUDA version
+- Set up a Python virtual environment
+- Install PyTorch, TensorFlow, cuDF
+- Run benchmarks with GPU/CPU fallback
+- Generate a leaderboard
+
+For preview without changes: `./install.sh --dry-run`
 
 ## Why this repo?
 
