@@ -6,8 +6,8 @@
     "status": "ELITE HACKER!",
     "cpu": "AMD Ryzen 9 5900X 12-Core Processor",
     "gpu": "NVIDIA GeForce RTX 5070",
-    "cuda_version": "12.2",
-    "driver_version": "525.60.13",
+    "cuda_version": "13.0",
+    "driver_version": "555.00",
     "os": "Ubuntu 22.04.3 LTS",
     "device": "cuda"
   },
