@@ -363,12 +363,22 @@ Check `install.log` for detailed execution logs.
 
 ### Testing
 
+**Why CI?** The GitHub Actions pipeline ensures code quality and prevents regressions by automatically testing every change. It validates that the installer works across different environments and catches issues before they reach users.
+
+**CI Jobs:**
+- **test-install**: Validates script functionality and dry-runs
+- **test-benchmarks**: Runs benchmark tests on CPU
+- **validate-docs**: Checks documentation completeness
+
+**Local Testing:**
 Run unit tests:
 ```bash
 python3 -m pytest tests/
 ```
 
-Run CI locally:
+**CI on GitHub:** Automatically runs on pushes and pull requests. Your GitHub repository will execute these checks for all contributors.
+
+Run CI locally (requires act):
 ```bash
 act -j test-install
 act -j test-benchmarks
