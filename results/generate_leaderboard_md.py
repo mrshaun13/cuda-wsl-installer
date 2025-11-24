@@ -7,7 +7,20 @@ import os
 def generate_markdown_leaderboard(scores):
     header = """# CUDA WSL Hacker Leaderboard 🕹️
 
-**Scoring: Lower times = BETTER!** (CUDA vs CPU battles, fastest wins!)
+```
+   ███╗░░██╗██╗░░░██╗██╗██████╗░██╗░█████╗░
+   ████╗░██║██║░░░██║██║██╔══██╗██║██╔══██╗
+   ██╔██╗██║██║░░░██║██║██║░░██║██║███████║
+   ██║╚████║╚██╗░██╔╝██║██║░░██║██║██╔══██║
+   ██║░╚███║░╚████╔╝░██║██████╔╝██║██║░░██║
+   ╚═╝░░╚══╝░░╚═══╝░░╚═╝╚═════╝░╚═╝╚═╝░░╚═╝
+═══════════════════════════════════════════════════════════════
+║   PHREAKERS & HACKERZ CUDA WSL LEADERBOARD - BBS 1985 STYLE!   ║
+║   Scoring: Lower times = BETTER! (CUDA vs CPU battles, fastest wins!) ║
+═══════════════════════════════════════════════════════════════
+║ Rank │ Handle              │ Benchmark             │ Score      │ Status ║
+╠══════╬═════════════════════╬══════════════════════╬════════════╬════════╣
+```
 
 | Rank | Handle | Benchmark | Score | Status |
 |------|--------|-----------|-------|--------|
@@ -34,7 +47,7 @@ def generate_markdown_leaderboard(scores):
         os_ = score.get('os', 'Unknown OS')
         cuda = score.get('cuda_version', 'Unknown CUDA')
         driver = score.get('driver_version', 'Unknown Driver')
-        device_type = 'GPU' if 'cuda' in benchmark.lower() else 'CPU'
+        device_type = 'GPU' if not benchmark.endswith('_cpu') else 'CPU'  # Assuming _cpu suffix for CPU runs
         footer += f"{rank}. **{handle}** - {benchmark} ({device_type}): CPU: {cpu} | GPU: {gpu} | OS: {os_} | CUDA: {cuda} | Driver: {driver}\n\n"
     
     footer += """## Contribute Your Scores! 🚀

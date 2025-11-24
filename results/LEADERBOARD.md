@@ -1,6 +1,19 @@
 # CUDA WSL Hacker Leaderboard 🕹️
 
-**Scoring: Lower times = BETTER!** (CUDA vs CPU battles, fastest wins!)
+```
+   ███╗░░██╗██╗░░░██╗██╗██████╗░██╗░█████╗░
+   ████╗░██║██║░░░██║██║██╔══██╗██║██╔══██╗
+   ██╔██╗██║██║░░░██║██║██║░░██║██║███████║
+   ██║╚████║╚██╗░██╔╝██║██║░░██║██║██╔══██║
+   ██║░╚███║░╚████╔╝░██║██████╔╝██║██║░░██║
+   ╚═╝░░╚══╝░░╚═══╝░░╚═╝╚═════╝░╚═╝╚═╝░░╚═╝
+═══════════════════════════════════════════════════════════════
+║   PHREAKERS & HACKERZ CUDA WSL LEADERBOARD - BBS 1985 STYLE!   ║
+║   Scoring: Lower times = BETTER! (CUDA vs CPU battles, fastest wins!) ║
+═══════════════════════════════════════════════════════════════
+║ Rank │ Handle              │ Benchmark             │ Score      │ Status ║
+╠══════╬═════════════════════╬══════════════════════╬════════════╬════════╣
+```
 
 | Rank | Handle | Benchmark | Score | Status |
 |------|--------|-----------|-------|--------|
@@ -8,9 +21,9 @@
 | 2 | @ProvenGuilty | pytorch_matmul | 0.0540s | PHREAKING IT! |
 
 ## System Specs for Top Scores (CPU vs GPU details)
-1. **@ShaunRocks** - pytorch_matmul (CPU): CPU: AMD Ryzen 9 5900X 12-Core Processor | GPU: NVIDIA GeForce RTX 4090 | OS: Ubuntu 22.04.3 LTS | CUDA: 12.2 | Driver: 525.60.13
+1. **@ShaunRocks** - pytorch_matmul (GPU): CPU: AMD Ryzen 9 5900X 12-Core Processor | GPU: NVIDIA GeForce RTX 4090 | OS: Ubuntu 22.04.3 LTS | CUDA: 12.2 | Driver: 525.60.13
 
-2. **@ProvenGuilty** - pytorch_matmul (CPU): CPU: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz | GPU: NVIDIA GeForce GTX 1080 Ti | OS: Ubuntu 20.04.6 LTS | CUDA: 11.5 | Driver: 470.42.01
+2. **@ProvenGuilty** - pytorch_matmul (GPU): CPU: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz | GPU: NVIDIA GeForce GTX 1080 Ti | OS: Ubuntu 20.04.6 LTS | CUDA: 11.5 | Driver: 470.42.01
 
 ## Contribute Your Scores! 🚀
 
