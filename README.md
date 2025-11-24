@@ -1,6 +1,6 @@
 # CUDA WSL Benchmark Installer
 
-🏆 **[View the Community Leaderboard](results/LEADERBOARD.md)** - Run benchmarks, compare scores, and contribute via PRs!
+**[View the Community Leaderboard](results/LEADERBOARD.md)** - Run benchmarks, compare scores, and contribute via PRs.
 
 Automated CUDA installation scripts for Windows 11 developers using WSL2 with integrated benchmarking and leaderboards.
 
@@ -406,4 +406,4 @@ MIT License - see LICENSE file.
 4. Ensure CI passes
 5. Submit a pull request
 
-Contributions welcome! 🎉
+Contributions welcome.

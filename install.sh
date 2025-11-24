@@ -1,88 +1,49 @@
 #!/bin/bash
 
-# CUDA WSL Installer - Unified Install Script
-# One-click install for CUDA, PyTorch, benchmarks, and leaderboard
+set -e
 
-set -e  # Exit on error
-
-# Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
-# Logging functions
-log_info() {
-    echo -e "${BLUE}[INFO]${NC} $1"
-}
+log_info() { echo -e "${BLUE}[INFO]${NC} $1"; }
+log_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
+log_warning() { echo -e "${YELLOW}[WARNING]${NC} $1"; }
+log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
-log_success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $1"
-}
-
-log_warning() {
-    echo -e "${YELLOW}[WARNING]${NC} $1"
-}
-
-log_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
-}
-
-# Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VENV_DIR="$SCRIPT_DIR/.cuda-wsl-bench-venv"
 DRY_RUN=false
 
-# Detect if GPU is available
 detect_gpu() {
-    log_info "Detecting GPU availability..."
-    
     if command -v nvidia-smi &> /dev/null; then
         GPU_COUNT=$(nvidia-smi --list-gpus 2>/dev/null | wc -l)
         if [ "$GPU_COUNT" -gt 0 ]; then
-            log_info "Found $GPU_COUNT GPU(s)"
             USE_GPU=true
             return 0
         fi
     fi
-    
-    log_warning "No NVIDIA GPUs detected. Will use CPU-only mode."
     USE_GPU=false
 }
 
 detect_gpu
 
-# Parse arguments
 while [[ $# -gt 0 ]]; do
     case $1 in
-        --dry-run)
-            DRY_RUN=true
-            shift
-            ;;
-        --help)
-            echo "Usage: $0 [--dry-run]"
-            echo "  --dry-run    Show what would be done without executing"
-            exit 0
-            ;;
-        *)
-            log_error "Unknown option: $1"
-            echo "Use --help for usage"
-            exit 1
-            ;;
+        --dry-run) DRY_RUN=true; shift ;;
+        --help) echo "Usage: $0 [--dry-run]"; echo "  --dry-run    Preview installation"; exit 0 ;;
+        *) log_error "Unknown option: $1"; exit 1 ;;
     esac
 done
 
-if [ "$DRY_RUN" = true ]; then
-    log_info "DRY RUN MODE - No changes will be made"
-fi
+if [ "$DRY_RUN" = true ]; then log_info "DRY RUN MODE"; fi
 
-# Function to run commands (with dry-run support)
 run_cmd() {
     if [ "$DRY_RUN" = true ]; then
-        echo "[DRY-RUN] Would run: $@"
+        echo "[DRY-RUN] $@"
     else
-        log_info "Running: $@"
         "$@"
     fi
 }
