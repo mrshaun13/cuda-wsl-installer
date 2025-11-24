@@ -188,14 +188,72 @@ GPU version first, then repeat with `CUDA_VISIBLE_DEVICES=` (empty) or
    ```
    Switch to pandas for the CPU baseline.
 
-5. **Monitor utilization while benchmarking** – watching `nvidia-smi` confirms workloads are actually engaging the GPU instead of silently falling back to CPU
-   ```bash
-   watch -n 1 nvidia-smi
-   ```
-   GPU utilization/memory rising during the test demonstrates the CUDA path is
-   active.
+## Running Benchmarks and Leaderboard
 
-## Troubleshooting
+To participate in the community CUDA WSL benchmarks and contribute to the gamified leaderboard, follow these steps. The leaderboard tracks performance across different hardware setups for fun comparison and optimization insights.
+
+### Prerequisites
+- CUDA installed via this repo.
+- Python environment with PyTorch and TensorFlow (use `scripts/benchmarks/setup_env.sh`).
+- Git configured with your GitHub handle (`git config user.name "YourGitHubUsername"`).
+
+### Running Benchmarks
+1. **Set up the environment:**
+   ```bash
+   cd scripts/benchmarks
+   bash setup_env.sh --phase baseline  # For CPU-only baseline
+   # or
+   bash setup_env.sh --phase after     # For GPU-enabled runs
+   ```
+
+2. **Run PyTorch matrix multiplication benchmark:**
+   ```bash
+   python run_pytorch_matmul.py --device cuda  # GPU run
+   # or
+   python run_pytorch_matmul.py --device cpu   # CPU run
+   ```
+   Options: `--size 4096` (matrix size), `--warmup 5`, `--reps 10`.
+
+3. **Run TensorFlow CNN benchmark:**
+   ```bash
+   python run_tensorflow_cnn.py --device cuda  # GPU run
+   # or
+   python run_tensorflow_cnn.py --device cpu   # CPU run
+   ```
+   Options: `--epochs 1`, `--batch_size 256`.
+
+Each run automatically:
+- Captures your system specs (CPU, GPU, OS, CUDA/driver versions).
+- Pulls your GitHub handle from git config.
+- Appends results to `~/.cuda-wsl-benchmarks/hacker_leaderboard.json`.
+- Displays the top 10 leaderboard with detailed specs for the top 5.
+
+### Leaderboard Details
+- **Scoring:** Lower times = better (faster is king!).
+- **Hardware capture:** CPU model, GPU model, OS version, CUDA version, driver version.
+- **Community sharing:** Submit PRs with your results to add to the shared board.
+- **Status messages:** Randomized hacker-themed fun (e.g., "ELITE HACKER!", "PHREAKING IT!").
+
+Example output (simplified):
+```
+NVIDIA
+═══════════════════════════════════════════════════════════════════════════════
+║   PHREAKERS & HACKERZ CUDA WSL LEADERBOARD - BBS 1985 STYLE!              ║
+║   Scoring: Lower times = BETTER! (CUDA vs CPU battles, fastest wins!)    ║
+═══════════════════════════════════════════════════════════════════════════════
+║ Rank │ Handle              │ Benchmark             │ Score      │ Status ║
+╠══════╬═════════════════════╬══════════════════════╬════════════╬════════╣
+║  1.  │ @ShaunRocks         │ pytorch_matmul        │ 0.0300s    │ ELITE HACKER! ║
+║  2.  │ @ProvenGuilty       │ pytorch_matmul        │ 0.0540s    │ PHREAKING IT! ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+   ▀▄▀▄▀▄ YOU DA MAN! ▄▀▄▀▄   STAY HACKIN' - NO LAMERS ALLOWED   ▀▄▀▄▀▄ YOU DA MAN! ▀▄▀▄▀▄
+
+System Specs for Top Scores (CPU vs GPU details):
+1. @ShaunRocks - pytorch_matmul (GPU): CPU: AMD Ryzen 9 | GPU: RTX 4090 | OS: Ubuntu 22.04 | CUDA: 12.2 | Driver: 525.60
+2. @ProvenGuilty - pytorch_matmul (GPU): CPU: Intel i7 | GPU: GTX 1080 Ti | OS: Ubuntu 20.04 | CUDA: 11.5 | Driver: 470.42
+```
+
+Contribute by running benchmarks and submitting results via PRs—let's see who dominates the CUDA WSL arena! 🚀
 
 * **`nvidia-smi` missing:** Install/repair the NVIDIA Windows driver, then
   restart WSL (`wsl --shutdown`).
