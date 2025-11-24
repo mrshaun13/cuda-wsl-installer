@@ -98,7 +98,7 @@ fi
 
 if [[ "$PHASE" == "baseline" ]]; then
   echo "[setup_env] Installing baseline packages..."
-  python -m pip install --upgrade torch==2.5.1 torchvision==0.20.1 tensorflow-cpu==2.18.0 pandas==2.2.3 matplotlib==3.9.2 numpy==2.3.5
+  python -m pip install --upgrade numpy==2.3.5 pandas==2.2.3 matplotlib==3.9.2 torch==2.5.1 torchvision==0.20.1 tensorflow-cpu==2.18.0
   echo "[setup_env] Baseline packages installed."
 else
   echo "[setup_env] Detecting CUDA version..."
@@ -111,12 +111,12 @@ else
     echo "[setup_env] Using PyTorch CUDA $PYTORCH_CUDA_SUFFIX."
   fi
 
+  echo "[setup_env] Installing core packages..."
+  python -m pip install --upgrade numpy==2.3.5 pandas==2.2.3 matplotlib==3.9.2
   echo "[setup_env] Installing PyTorch..."
   python -m pip install --upgrade torch torchvision $PYTORCH_INDEX
   echo "[setup_env] Installing TensorFlow..."
   python -m pip install --upgrade tensorflow[and-cuda]==2.18.0
-  echo "[setup_env] Installing data science packages..."
-  python -m pip install --upgrade pandas==2.2.3 matplotlib==3.9.2 numpy==2.3.5
   if [[ "$BENCH_SET" == "all" ]]; then
     echo "[setup_env] Installing RAPIDS..."
     # Assume cu12 for CUDA 12.x, cu13 for 13.x
