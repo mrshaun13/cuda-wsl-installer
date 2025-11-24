@@ -25,6 +25,7 @@ coverage.xml
 # Virtual environments
 .cuda-wsl-bench-venv/
 .cuda-wsl-benchmarks/
+test_venv/
 
 # Results and logs (ignore dynamic changes, keep current committed)
 results/*.json
@@ -34,6 +35,9 @@ report_final.json
 
 # CUDA samples and builds
 cuda-samples/
+
+# Package files
+*.deb
 
 # OS generated files
 .DS_Store
