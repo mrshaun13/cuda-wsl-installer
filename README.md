@@ -259,6 +259,13 @@ Each run automatically:
 - Displays the top 10 leaderboard with detailed specs for the top 5.
 
 ### Leaderboard Details
+- **Scoring:** Lower times = better (faster is king!).
+- **Hardware capture:** CPU model, GPU model, OS version, CUDA version, driver version.
+- **Community sharing:** Submit PRs with your results to add to the shared board.
+- **Status messages:** Randomized hacker-themed fun (e.g., "ELITE HACKER!", "PHREAKING IT!").
+
+**View the live leaderboard on GitHub:** [results/LEADERBOARD.md](results/LEADERBOARD.md)
+
 ### How to Contribute Scores
 1. Fork this repo
 2. Set up the Python environment: `cd scripts/benchmarks && bash setup_env.sh --phase after`
