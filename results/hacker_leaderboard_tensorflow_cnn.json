@@ -8,6 +8,7 @@
     "gpu": "NVIDIA GeForce GTX 1080 Ti",
     "cuda_version": "581.57",
     "driver_version": "581.57",
-    "os": "Ubuntu 24.04.3 LTS"
+    "os": "Ubuntu 24.04.3 LTS",
+    "device": "cuda"
   }
 ]

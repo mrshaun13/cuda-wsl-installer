@@ -203,6 +203,10 @@ To participate in the community CUDA WSL benchmarks and contribute to the gamifi
 - Git configured with your GitHub handle (`git config user.name "YourGitHubUsername"`).
 - **System verification:** Run `nvidia-smi` to ensure GPU is detected, and `nvcc --version` to check CUDA.
 
+### Important Notes
+- **GPU/CPU Fallback:** Benchmarks attempt GPU first, but fall back to CPU if CUDA is unavailable or fails (e.g., due to library incompatibilities). This ensures the tests run on all hardware.
+- **Device Detection:** The leaderboard shows the actual device used (GPU or CPU) based on successful execution.
+
 ### Running Benchmarks
 You can run individual benchmarks for targeted testing or all benchmarks at once for a full leaderboard submission.
 

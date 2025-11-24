@@ -38,7 +38,7 @@ def generate_markdown_leaderboard():
                 rank = f"{i+1}"
                 handle = score.get('handle', 'Anonymous')
                 benchmark = score['benchmark']
-                device_type = 'GPU' if not benchmark.endswith('_cpu') else 'CPU'
+                device_type = score.get('device', 'GPU')
                 time_score = f"{score['score']:.4f}s" if 'score' in score else 'DNF'
                 # Calculate delta to next
                 if i < len(scores) - 1:
@@ -59,7 +59,7 @@ def generate_markdown_leaderboard():
                 os_ = score.get('os', 'Unknown OS')
                 cuda = score.get('cuda_version', 'Unknown CUDA')
                 driver = score.get('driver_version', 'Unknown Driver')
-                device_type = 'GPU' if not benchmark.endswith('_cpu') else 'CPU'
+                device_type = score.get('device', 'GPU')
                 full_md += f"{rank}. **{handle}** - {benchmark} ({device_type}): CPU: {cpu} | GPU: {gpu} | OS: {os_} | CUDA: {cuda} | Driver: {driver}\n\n"
         else:
             full_md += f"## {bench.replace('_', ' ').title()} Leaderboard\n\nNo scores yet.\n\n"
