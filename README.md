@@ -264,28 +264,11 @@ Each run automatically:
 - **Community sharing:** Submit PRs with your results to add to the shared board.
 - **Status messages:** Randomized hacker-themed fun (e.g., "ELITE HACKER!", "PHREAKING IT!").
 
-Example output (simplified):
-```
-# CUDA WSL Hacker Leaderboard 🕹️
-
-   ███╗░░██╗██╗░░░██╗██╗██████╗░██╗░█████╗░
-   ████╗░██║██║░░░██║██║██╔══██╗██║██╔══██╗
-   ██╔██╗██║██║░░░██║██║██║░░██║██║███████║
-   ██║╚████║╚██╗░██╔╝██║██║░░██║██║██╔══██║
-   ██║░╚███║░╚████╔╝░██║██████╔╝██║██║░░██║
-   ╚═╝░░╚══╝░░╚═══╝░░╚═╝╚═════╝░╚═╝╚═╝░░╚═╝
-═══════════════════════════════════════════════════════════════
-║   PHREAKERS & HACKERZ CUDA WSL LEADERBOARD - BBS 1985 STYLE!   ║
-║   Scoring: Lower times = BETTER! (CUDA vs CPU battles, fastest wins!) ║
-═══════════════════════════════════════════════════════════════
-║ Rank │ Handle              │ Benchmark             │ Device │ Score      │ Delta      │ Faster      │ Status ║
-╠══════╬═════════════════════╬══════════════════════╬════════╬════════════╬════════════╬═════════════╬════════╣
-
 ## Pytorch Matmul Leaderboard
 
 | Rank | Handle | Benchmark | Device | Score | Delta (s) | Faster by % | Status |
 |------|--------|-----------|--------|-------|-----------|-------------|--------|
-| 1 | @ShaunRocks | pytorch_matmul | GPU | 0.0300s | 0.0240 | 80.0% | ELITE HACKER! |
+| 1 | @ShaunRocks | pytorch_matmul | GPU | 0.0300s | 0.0240 | 80.0% | ELITE HACKER! (outdated - please rerun) |
 | 2 | @Christopher Ryan | pytorch_matmul | GPU | 0.0540s | - | - | PHREAKING IT! |
 
 ### System Specs for Top Scores
@@ -298,15 +281,13 @@ Example output (simplified):
 |------|--------|-----------|--------|-------|-----------|-------------|--------|
 | 1 | @Christopher Ryan | tensorflow_cnn | GPU | 4.6939s | - | - | ELITE HACKER! |
 
-### System Specs for Top Scores
-1. **@Christopher Ryan** - tensorflow_cnn (GPU): CPU: Intel(R) Core(TM) i7-7700K CPU @ 4.20GHz | GPU: NVIDIA GeForce GTX 1080 Ti | OS: Ubuntu 24.04.3 LTS | CUDA: 12.5 | Driver: 581.57
-
 ## Cudf Groupby Leaderboard
 
 | Rank | Handle | Benchmark | Device | Score | Delta (s) | Faster by % | Status |
 |------|--------|-----------|--------|-------|-----------|-------------|--------|
 | 1 | @Christopher Ryan | cudf_groupby | CPU | 0.0250s | - | - | ELITE HACKER! |
 
+### How to Contribute Scores
 **View the live leaderboard on GitHub:** [results/LEADERBOARD.md](results/LEADERBOARD.md)
 
 Contribute by running benchmarks and submitting results via PRs—let's see who dominates the CUDA WSL arena! 🚀
