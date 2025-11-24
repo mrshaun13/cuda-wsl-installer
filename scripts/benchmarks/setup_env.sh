@@ -80,10 +80,19 @@ fix_cudnn_links() {
 
 detect_cuda_version() {
   if command -v nvcc >/dev/null 2>&1; then
-    nvcc --version | grep -oP 'release \K[0-9]+\.[0-9]+' | tr -d '.'
+    version=$(nvcc --version | grep -oP 'release \K[0-9]+\.[0-9]+')
+    major_minor=$(echo "$version" | tr -d '.')
+    # Map to available PyTorch CUDA versions
+    if [[ "$major_minor" -ge 126 ]]; then
+      echo "126"
+    elif [[ "$major_minor" -ge 124 ]]; then
+      echo "124"
+    else
+      echo "121"
+    fi
   elif command -v nvidia-smi >/dev/null 2>&1; then
-    # Fallback: assume 12.5 for Pascal+, but this is approximate
-    echo "125"
+    # Fallback: assume 12.4 for compatibility
+    echo "124"
   else
     echo "cpu"
   fi
