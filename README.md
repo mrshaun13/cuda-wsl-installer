@@ -214,13 +214,13 @@ To participate in the community CUDA WSL benchmarks and contribute to the gamifi
    ```
    Options: `--size 4096` (matrix size), `--warmup 5`, `--reps 10`.
 
-3. **Run TensorFlow CNN benchmark:**
+3. **Run RAPIDS cuDF groupby benchmark:**
    ```bash
-   python run_tensorflow_cnn.py --device cuda  # GPU run
+   python run_cudf_groupby.py --device cuda  # GPU run (requires RAPIDS)
    # or
-   python run_tensorflow_cnn.py --device cpu   # CPU run
+   python run_cudf_groupby.py --device cpu   # CPU run (pandas)
    ```
-   Options: `--epochs 1`, `--batch_size 256`.
+   Options: `--rows 5000000` (number of rows).
 
 Each run automatically:
 - Captures your system specs (CPU, GPU, OS, CUDA/driver versions).
