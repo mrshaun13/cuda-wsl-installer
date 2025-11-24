@@ -28,33 +28,18 @@
 | Rank | Handle | Benchmark | Device | Score | Status |
 |------|--------|-----------|--------|-------|--------|
 | 1 | @Christopher Ryan | tensorflow_cnn | GPU | 4.6939s | ELITE HACKER! |
-| 2 | @Christopher Ryan | tensorflow_cnn | GPU | 5.7022s | ELITE HACKER! |
-| 3 | @Christopher Ryan | tensorflow_cnn | GPU | 19.4926s | ELITE HACKER! |
 
 ### System Specs for Top Scores
 1. **@Christopher Ryan** - tensorflow_cnn (GPU): CPU: Intel(R) Core(TM) i7-7700K CPU @ 4.20GHz | GPU: NVIDIA GeForce GTX 1080 Ti | OS: Ubuntu 24.04.3 LTS | CUDA: 581.57 | Driver: 581.57
-
-2. **@Christopher Ryan** - tensorflow_cnn (GPU): CPU: Intel(R) Core(TM) i7-7700K CPU @ 4.20GHz | GPU: NVIDIA GeForce GTX 1080 Ti | OS: Ubuntu 24.04.3 LTS | CUDA: 581.57 | Driver: 581.57
-
-3. **@Christopher Ryan** - tensorflow_cnn (GPU): CPU: Intel(R) Core(TM) i7-7700K CPU @ 4.20GHz | GPU: NVIDIA GeForce GTX 1080 Ti | OS: Ubuntu 24.04.3 LTS | CUDA: 581.57 | Driver: 581.57
 
 ## {bench.replace('_', ' ').title()} Leaderboard
 
 | Rank | Handle | Benchmark | Device | Score | Status |
 |------|--------|-----------|--------|-------|--------|
 | 1 | @Christopher Ryan | cudf_groupby | GPU | 0.0293s | ELITE HACKER! |
-| 2 | @Christopher Ryan | cudf_groupby | GPU | 0.0294s | ELITE HACKER! |
-| 3 | @Christopher Ryan | cudf_groupby | GPU | 0.0345s | ELITE HACKER! |
-| 4 | @Christopher Ryan | cudf_groupby | GPU | 0.0410s | ELITE HACKER! |
 
 ### System Specs for Top Scores
 1. **@Christopher Ryan** - cudf_groupby (GPU): CPU: Intel(R) Core(TM) i7-7700K CPU @ 4.20GHz | GPU: NVIDIA GeForce GTX 1080 Ti | OS: Ubuntu 24.04.3 LTS | CUDA: 581.57 | Driver: 581.57
-
-2. **@Christopher Ryan** - cudf_groupby (GPU): CPU: Intel(R) Core(TM) i7-7700K CPU @ 4.20GHz | GPU: NVIDIA GeForce GTX 1080 Ti | OS: Ubuntu 24.04.3 LTS | CUDA: 581.57 | Driver: 581.57
-
-3. **@Christopher Ryan** - cudf_groupby (GPU): CPU: Intel(R) Core(TM) i7-7700K CPU @ 4.20GHz | GPU: NVIDIA GeForce GTX 1080 Ti | OS: Ubuntu 24.04.3 LTS | CUDA: 581.57 | Driver: 581.57
-
-4. **@Christopher Ryan** - cudf_groupby (GPU): CPU: Intel(R) Core(TM) i7-7700K CPU @ 4.20GHz | GPU: NVIDIA GeForce GTX 1080 Ti | OS: Ubuntu 24.04.3 LTS | CUDA: 581.57 | Driver: 581.57
 
 ## Contribute Your Scores! 🚀
 
