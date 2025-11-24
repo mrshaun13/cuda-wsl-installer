@@ -83,89 +83,64 @@ def run_once(size: int, device: torch.device) -> float:
 
 def main() -> None:
     args = parse_args()
+
+    # Check for CUDA availability and usability
+    cuda_usable = False
+    if torch.cuda.is_available() and torch.cuda.device_count() > 0:
+        try:
+            # Test device creation and simple operation
+            test_tensor = torch.randn(10, 10, device='cuda')
+            torch.cuda.synchronize()
+            cuda_usable = True
+        except Exception as e:
+            print(f"CUDA device test failed: {e}")
+
+    if args.device == "cuda" and not cuda_usable:
+        print("CUDA requested but not usable, falling back to CPU")
+        args.device = "cpu"
+
     device = ensure_device(args.device)
 
-    for _ in range(args.warmup):
-        run_once(args.size, device)
+    # Try to run, fallback on CUDA error
+    try:
+        for _ in range(args.warmup):
+            run_once(args.size, device)
 
-    timings = [run_once(args.size, device) for _ in range(args.repeats)]
-    avg = sum(timings) / len(timings)
+        timings = [run_once(args.size, device) for _ in range(args.repeats)]
+        avg = sum(timings) / len(timings)
 
-    summary = {
-        "device": device.type,
-        "size": args.size,
-        "repeats": args.repeats,
-        "average_seconds": avg,
-        "samples": timings,
-    }
+        print(f"[benchmark] device={device.type} size={args.size} avg={avg:.4f}s")
+        
+        # Leaderboard code here
+        leaderboard_main(avg, args.device)
 
-    print(f"[benchmark] device={device.type} size={args.size} avg={avg:.4f}s")
-    if args.result_file:
-        args.result_file.parent.mkdir(parents=True, exist_ok=True)
-        args.result_file.write_text(json.dumps(summary, indent=2))
+    except Exception as e:
+        if 'cuda' in str(e).lower() and args.device == "cuda":
+            print(f"CUDA error: {e}, falling back to CPU")
+            args.device = "cpu"
+            device = ensure_device(args.device)
+            
+            for _ in range(args.warmup):
+                run_once(args.size, device)
 
-    # Leaderboard integration
+            timings = [run_once(args.size, device) for _ in range(args.repeats)]
+            avg = sum(timings) / len(timings)
+
+            print(f"[benchmark] device={device.type} size={args.size} avg={avg:.4f}s (fallback)")
+            
+            # Leaderboard code
+            leaderboard_main(avg, args.device)
+        else:
+            raise
+
+
+def leaderboard_main(avg, device):
+    # Simplified leaderboard integration
     import subprocess
     import os
-    from datetime import datetime
+    import json
 
-    # Define the leaderboard display function
-    def print_hacker_leaderboard(scores):
-        header = """
-   ███╗░░██╗██╗░░░██╗██╗██████╗░██╗░█████╗░
-   ████╗░██║██║░░░██║██║██╔══██╗██║██╔══██╗
-   ██╔██╗██║██║░░░██║██║██║░░██║██║███████║
-   ██║╚████║╚██╗░██╔╝██║██║░░██║██║██╔══██║
-   ██║░╚███║░╚████╔╝░██║██████╔╝██║██║░░██║
-   ╚═╝░░╚══╝░░╚═══╝░░╚═╝╚═════╝░╚═╝╚═╝░░╚═╝
-═══════════════════════════════════════════════════════════════════════════════
-║   PHREAKERS & HACKERZ CUDA WSL LEADERBOARD - BBS 1985 STYLE!                              ║
-║   Scoring: Lower times = BETTER! (CUDA vs CPU battles, fastest wins!)                     ║
-═══════════════════════════════════════════════════════════════════════════════════════════════
-║ Rank │ Handle              │ Benchmark             │ Score      │ Status                 ║
-╠══════╬═════════════════════╬══════════════════════╬════════════╬════════════════════════╣
-"""
-        footer = """
-╚══════════════════════════════════════════════════════════════════════════════════════════════╝
-   ▀▄▀▄▀▄ YOU DA MAN! ▄▀▄▀▄   STAY HACKIN' - NO LAMERS ALLOWED   ▀▄▀▄▀▄ YOU DA MAN! ▀▄▀▄▀▄
-
-System Specs for Top Scores (CPU vs GPU details):
-"""
-
-        print(header)
-        for i, score in enumerate(scores[:10]):  # Show top 10
-            rank = f"{i+1:2d}."
-            handle = score.get('handle', 'Anonymous')[:19].ljust(19)
-            benchmark = score['benchmark'][:20].ljust(20)
-            time_score = f"{score['score']:.4f}s" if 'score' in score else score.get('time', 'DNF')
-            status = score.get('status', 'UNKNOWN!')[:22].ljust(22)
-            print(f"║ {rank}  │ {handle} │ {benchmark} │ {time_score} │ {status} ║")
-        print(footer)
-        
-        # Detailed specs below
-        for i, score in enumerate(scores[:5]):  # Details for top 5
-            rank = i+1
-            handle = score.get('handle', 'Anonymous')
-            benchmark = score['benchmark']
-            cpu = score.get('cpu', 'Unknown CPU')
-            gpu = score.get('gpu', 'Unknown GPU')
-            os_ = score.get('os', 'Unknown OS')
-            cuda = score.get('cuda_version', 'Unknown CUDA')
-            driver = score.get('driver_version', 'Unknown Driver')
-            device_type = score.get('device', 'cuda').upper()
-            print(f"{rank}. {handle} - {benchmark} ({device_type}): CPU: {cpu} | GPU: {gpu} | OS: {os_} | CUDA: {cuda} | Driver: {driver}")
-
-    # Append to shared leaderboard file
-    benchmark_type = "pytorch_matmul"
-    leaderboard_file = os.path.join(os.path.dirname(__file__), f"../../results/hacker_leaderboard_{benchmark_type}.json")
-    if os.path.exists(leaderboard_file):
-        with open(leaderboard_file, 'r') as f:
-            scores = json.load(f)
-    else:
-        scores = []
-
-    # Add your new score (customize based on benchmark type)
-    # Get system info for this run
+    # Get system info
     try:
         cpu_info = subprocess.check_output("grep 'model name' /proc/cpuinfo | head -1 | cut -d: -f2", shell=True).decode().strip()
     except:
@@ -174,20 +149,6 @@ System Specs for Top Scores (CPU vs GPU details):
         gpu_info = subprocess.check_output("nvidia-smi --query-gpu=name --format=csv,noheader,nounits | head -1", shell=True).decode().strip()
     except:
         gpu_info = "Unknown GPU"
-    try:
-        cuda_version = "12.5"  # Installed CUDA version
-    except:
-        cuda_version = "Unknown CUDA"
-    try:
-        os_info = subprocess.check_output("lsb_release -d | cut -f2", shell=True).decode().strip()
-    except:
-        os_info = "Unknown OS"
-    try:
-        driver_version = subprocess.check_output("nvidia-smi --query-gpu=driver_version --format=csv,noheader,nounits | head -1", shell=True).decode().strip()
-    except:
-        driver_version = "Unknown Driver"
-
-    # Get GitHub handle from git config
     try:
         github_handle = subprocess.check_output("git config user.name", shell=True).decode().strip()
         if not github_handle.startswith('@'):
@@ -199,15 +160,24 @@ System Specs for Top Scores (CPU vs GPU details):
         "handle": github_handle,
         "benchmark": "pytorch_matmul",
         "score": avg,
-        "status": "ELITE HACKER!",  # Randomize or customize
+        "status": "ELITE HACKER!",
         "cpu": cpu_info,
         "gpu": gpu_info,
-        "cuda_version": cuda_version,
-        "driver_version": driver_version,
-        "os": os_info,
-        "device": ARGS.device
+        "cuda_version": "12.5",
+        "driver_version": "581.57",
+        "os": "Ubuntu 24.04.3 LTS",
+        "device": device
     }
-    # Check if user already has a score, keep the best (lowest time)
+
+    # Load and update leaderboard
+    leaderboard_file = os.path.join(os.path.dirname(__file__), "../../results/hacker_leaderboard_pytorch_matmul.json")
+    if os.path.exists(leaderboard_file):
+        with open(leaderboard_file, 'r') as f:
+            scores = json.load(f)
+    else:
+        scores = []
+
+    # Replace or add
     existing_index = next((i for i, s in enumerate(scores) if s.get('handle') == github_handle), None)
     if existing_index is not None:
         if avg < scores[existing_index]['score']:
@@ -215,15 +185,9 @@ System Specs for Top Scores (CPU vs GPU details):
     else:
         scores.append(new_entry)
 
-    # Sort by lowest score (best first) and keep top 100
     scores = sorted(scores, key=lambda x: x.get("score", float('inf')))[:100]
 
     with open(leaderboard_file, 'w') as f:
         json.dump(scores, f, indent=2)
 
-    # Display the leaderboard
-    print_hacker_leaderboard(scores)
-
-
-if __name__ == "__main__":
-    main()
+    print(f"Leaderboard updated. Your score: {avg:.4f}s on {device}")
