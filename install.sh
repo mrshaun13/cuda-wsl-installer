@@ -178,35 +178,38 @@ main() {
     if [ "$DRY_RUN" != true ]; then
         source "$VENV_DIR/bin/activate"
         VENV_PYTHON="$VENV_DIR/bin/python3"
-    fi
 
-    # Health checks
-    if ! health_check; then
-        log_error "Health checks failed. Exiting."
-        exit 1
-    fi
+        # Health checks
+        if ! health_check; then
+            log_error "Health checks failed. Exiting."
+            exit 1
+        fi
 
-    # Run benchmarks
-    if [ "$USE_GPU" = true ]; then
-        if ! python3 scripts/benchmark_runner.py --gpu --venv-python "$VENV_PYTHON" --skip-leaderboard ${DRY_RUN:+--dry-run}; then
-            log_warning "Some benchmarks failed, but continuing..."
+        # Run benchmarks
+        if [ "$USE_GPU" = true ]; then
+            if ! python3 scripts/benchmark_runner.py --gpu --venv-python "$VENV_PYTHON" --skip-leaderboard; then
+                log_warning "Some benchmarks failed, but continuing..."
+            fi
+        else
+            if ! python3 scripts/benchmark_runner.py --venv-python "$VENV_PYTHON" --skip-leaderboard; then
+                log_warning "Some benchmarks failed, but continuing..."
+            fi
+        fi
+
+        # Generate leaderboard
+        if ! generate_leaderboard; then
+            log_warning "Leaderboard generation failed, but install is complete"
+        fi
+
+        log_success "Installation complete! Leaderboard available at: results/LEADERBOARD.md"
+        if [ "$USE_GPU" = true ]; then
+            log_info "To rerun benchmarks: source $VENV_DIR/bin/activate && python3 scripts/benchmark_runner.py --gpu"
+        else
+            log_info "To rerun benchmarks: source $VENV_DIR/bin/activate && python3 scripts/benchmark_runner.py"
         fi
     else
-        if ! python3 scripts/benchmark_runner.py --venv-python "$VENV_PYTHON" --skip-leaderboard ${DRY_RUN:+--dry-run}; then
-            log_warning "Some benchmarks failed, but continuing..."
-        fi
-    fi
-
-    # Generate leaderboard
-    if ! generate_leaderboard; then
-        log_warning "Leaderboard generation failed, but install is complete"
-    fi
-
-    log_success "Installation complete! Leaderboard available at: results/LEADERBOARD.md"
-    if [ "$USE_GPU" = true ]; then
-        log_info "To rerun benchmarks: source $VENV_DIR/bin/activate && python3 scripts/benchmark_runner.py --gpu"
-    else
-        log_info "To rerun benchmarks: source $VENV_DIR/bin/activate && python3 scripts/benchmark_runner.py"
+        log_success "DRY RUN complete! Would run health checks, benchmarks, and generate leaderboard."
+        log_info "DRY RUN: Would show installation completion message"
     fi
 }
 
