@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+# Global variable for venv python path
+venv_python = None
+
 import subprocess
 import sys
 import os
@@ -22,7 +25,7 @@ def run_cmd(cmd, check=True, shell=False):
         cmd_list = cmd if shell else cmd.split()
     else:
         cmd_list = cmd
-    result = subprocess.run(cmd_list, shell=shell, capture_output=True, text=True)
+    result = subprocess.run(cmd_list, shell=shell, capture_output=True, text=True, env=os.environ)
     if check and result.returncode != 0:
         log_error(f"Command failed: {cmd}")
         raise subprocess.CalledProcessError(result.returncode, cmd)
@@ -37,28 +40,43 @@ def detect_gpu_compute_cap():
         return None
 
 def setup_venv(venv_path):
+    print(f"DEBUG: setup_venv called with path: {venv_path}")
+    log_info(f"Setting up venv at: {venv_path}")
     if not os.path.exists(venv_path):
+        print("DEBUG: Creating venv...")
         venv.create(venv_path, with_pip=True)
+        print("DEBUG: Venv create completed")
+        log_info("Venv created")
+    else:
+        log_info("Venv already exists")
+    python_path = os.path.join(venv_path, 'bin', 'python3')
+    print(f"DEBUG: Python path: {python_path}")
+    print(f"DEBUG: Python exists: {os.path.exists(python_path)}")
+    log_info(f"Venv python path: {python_path}")
+    log_info(f"Venv python exists: {os.path.exists(python_path)}")
     return venv_path
 
 def activate_venv(venv_path):
-    activate_script = os.path.join(venv_path, 'bin', 'activate')
-    if not os.path.exists(activate_script):
-        raise FileNotFoundError(f"Activate script not found: {activate_script}")
-    command = f"source {activate_script} && env"
-    result = run_cmd(command, shell=True)
-    env_vars = {}
-    for line in result.stdout.split('\n'):
-        if '=' in line:
-            key, value = line.split('=', 1)
-            env_vars[key] = value
-    os.environ.update(env_vars)
-    sys.path.insert(0, os.path.join(venv_path, 'lib', f'python{sys.version_info.major}.{sys.version_info.minor}', 'site-packages'))
+    global venv_python
+    venv_python = os.path.join(venv_path, 'bin', 'python3')
+    venv_site_packages = os.path.join(venv_path, 'lib', f'python{sys.version_info.major}.{sys.version_info.minor}', 'site-packages')
+    
+    log_info(f"Activating venv, python: {venv_python}")
+    log_info(f"Venv python exists: {os.path.exists(venv_python)}")
+    
+    # Update PATH to include venv bin
+    venv_bin = os.path.join(venv_path, 'bin')
+    if venv_bin not in os.environ.get('PATH', ''):
+        os.environ['PATH'] = f"{venv_bin}:{os.environ.get('PATH', '')}"
+    
+    # Update sys.path to include venv site-packages
+    if venv_site_packages not in sys.path:
+        sys.path.insert(0, venv_site_packages)
 
-def upgrade_pip():
-    run_cmd([sys.executable, '-m', 'pip', 'install', '--upgrade', 'pip'])
+def upgrade_pip(venv_python):
+    run_cmd([venv_python, '-m', 'pip', 'install', '--upgrade', 'pip'])
 
-def install_packages(use_gpu=True):
+def install_packages(use_gpu=True, venv_python=None):
     if use_gpu:
         cuda_version = "12.0"
         try:
@@ -91,7 +109,7 @@ def install_packages(use_gpu=True):
 
     for package in packages:
         try:
-            run_cmd([sys.executable, '-m', 'pip', 'install'] + package.split())
+            run_cmd([venv_python, '-m', 'pip', 'install'] + package.split())
         except subprocess.CalledProcessError:
             log_warning(f"Failed to install: {package}")
 
@@ -121,8 +139,9 @@ def main():
     try:
         venv_path = setup_venv(args.venv_path)
         activate_venv(venv_path)
-        upgrade_pip()
-        install_packages(args.gpu)
+        venv_python = os.path.join(venv_path, 'bin', 'python3')
+        upgrade_pip(venv_python)
+        install_packages(args.gpu, venv_python)
         setup_logging()
     except Exception as e:
         log_error(f"Setup failed: {e}")
