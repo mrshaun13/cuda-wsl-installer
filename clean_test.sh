@@ -31,13 +31,28 @@ log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-# Check if we're in the right directory
-if [[ ! -d "../CascadeProjects" ]]; then
-    log_error "This script should be run from ~/CascadeProjects/cuda-wsl-installer/"
+# Get the current directory and determine if we're inside cuda-wsl-installer
+CURRENT_DIR=$(pwd)
+BASENAME=$(basename "$CURRENT_DIR")
+
+if [[ "$BASENAME" == "cuda-wsl-installer" ]]; then
+    # We're inside the repo, go up one level
+    PARENT_DIR=$(dirname "$CURRENT_DIR")
+    log_info "Running from within repo, switching to parent directory: $PARENT_DIR"
+    cd "$PARENT_DIR"
+elif [[ -d "cuda-wsl-installer" ]]; then
+    # We're in the parent directory
+    log_info "Running from parent directory"
+else
+    log_error "Cannot find cuda-wsl-installer directory. Please run from ~/CascadeProjects/"
     exit 1
 fi
 
-cd ../CascadeProjects
+# Now we should be in the parent directory (CascadeProjects)
+if [[ ! -d "cuda-wsl-installer" ]]; then
+    log_error "cuda-wsl-installer directory not found in current location"
+    exit 1
+fi
 
 # Remove existing repo if it exists
 if [[ -d "cuda-wsl-installer" ]]; then
