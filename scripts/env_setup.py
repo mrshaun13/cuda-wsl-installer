@@ -95,7 +95,7 @@ def install_packages(use_gpu=True, venv_python=None):
     
     if cuda_version.startswith('13') and compute_cap and int(compute_cap.split('.')[0]) >= 8:
         tensorflow_version = "tensorflow[and-cuda]"
-    elif compute_cap is not None and compute_cap <= 7:
+    elif compute_cap is not None and int(compute_cap.split('.')[0]) <= 7:
         tensorflow_version = "tensorflow-cpu"
     else:
         tensorflow_version = "tensorflow[and-cuda]"
