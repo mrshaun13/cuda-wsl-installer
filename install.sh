@@ -162,9 +162,16 @@ main() {
     install_cuda
 
     # Setup environment
-    if ! python3 scripts/env_setup.py --venv-path "$VENV_DIR" --gpu $USE_GPU; then
-        log_error "Environment setup failed. Exiting."
-        exit 1
+    if [ "$USE_GPU" = true ]; then
+        if ! python3 scripts/env_setup.py --venv-path "$VENV_DIR" --gpu; then
+            log_error "Environment setup failed. Exiting."
+            exit 1
+        fi
+    else
+        if ! python3 scripts/env_setup.py --venv-path "$VENV_DIR"; then
+            log_error "Environment setup failed. Exiting."
+            exit 1
+        fi
     fi
 
     # Activate venv for subsequent operations
@@ -180,8 +187,14 @@ main() {
     fi
 
     # Run benchmarks
-    if ! python3 scripts/benchmark_runner.py --gpu $USE_GPU --venv-python "$VENV_PYTHON" --skip-leaderboard; then
-        log_warning "Some benchmarks failed, but continuing..."
+    if [ "$USE_GPU" = true ]; then
+        if ! python3 scripts/benchmark_runner.py --gpu --venv-python "$VENV_PYTHON" --skip-leaderboard; then
+            log_warning "Some benchmarks failed, but continuing..."
+        fi
+    else
+        if ! python3 scripts/benchmark_runner.py --venv-python "$VENV_PYTHON" --skip-leaderboard; then
+            log_warning "Some benchmarks failed, but continuing..."
+        fi
     fi
 
     # Generate leaderboard
@@ -190,7 +203,11 @@ main() {
     fi
 
     log_success "Installation complete! Leaderboard available at: results/LEADERBOARD.md"
-    log_info "To rerun benchmarks: source $VENV_DIR/bin/activate && python3 scripts/benchmark_runner.py --gpu $USE_GPU"
+    if [ "$USE_GPU" = true ]; then
+        log_info "To rerun benchmarks: source $VENV_DIR/bin/activate && python3 scripts/benchmark_runner.py --gpu"
+    else
+        log_info "To rerun benchmarks: source $VENV_DIR/bin/activate && python3 scripts/benchmark_runner.py"
+    fi
 }
 
 # Run main
