@@ -1,5 +1,17 @@
 [
   {
+    "handle": "@ShaunRocks",
+    "benchmark": "tensorflow_cnn",
+    "score": 3.2,
+    "status": "ELITE HACKER!",
+    "cpu": "AMD Ryzen 9 5900X 12-Core Processor",
+    "gpu": "NVIDIA GeForce RTX 5070",
+    "cuda_version": "13.0",
+    "driver_version": "581.80",
+    "os": "Ubuntu 22.04.3 LTS",
+    "device": "cuda"
+  },
+  {
     "handle": "@Christopher Ryan",
     "benchmark": "tensorflow_cnn",
     "score": 4.518053100997349,
