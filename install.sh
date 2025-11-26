@@ -161,6 +161,12 @@ main() {
     # Install CUDA (now handles GPU detection internally)
     install_cuda
 
+    # Export CUDA paths so nvcc is available for env_setup.py
+    if [ "$USE_GPU" = true ] && [ -d "/usr/local/cuda" ]; then
+        export PATH="/usr/local/cuda/bin:$PATH"
+        export LD_LIBRARY_PATH="/usr/local/cuda/lib64:${LD_LIBRARY_PATH:-}"
+    fi
+
     # Setup environment
     if [ "$USE_GPU" = true ]; then
         if ! python3 scripts/env_setup.py --venv-path "$VENV_DIR" --gpu $([ "$DRY_RUN" = true ] && echo "--dry-run"); then
