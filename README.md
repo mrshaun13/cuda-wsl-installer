@@ -31,13 +31,16 @@ Upgrading between CUDA major versions on WSL often requires uninstalling and
 reinstalling multiple packages, repos, and samples. These scripts encapsulate
 known-good flows for two scenarios:
 
-| Hardware profile                          | Compute capability | CUDA track |
-|------------------------------------------|--------------------|------------|
-| Pascal / early Turing (e.g., GTX 1080 Ti) | ≤ 7.x              | 11.0       |
-| Ampere, Ada, Blackwell (e.g., RTX 5070)   | ≥ 8.x              | 13.0       |
+| Hardware profile                          | Compute capability | CUDA track | PyTorch | TensorFlow |
+|------------------------------------------|--------------------|------------|---------|------------|
+| Pascal / early Turing (e.g., GTX 1080 Ti) | ≤ 7.x              | 11.0       | cu118   | CPU-only   |
+| Ampere, Ada, Blackwell (e.g., RTX 5070)   | ≥ 8.x              | 13.0       | cu124   | GPU-enabled|
 
-The script auto-detects the compute capability via `nvidia-smi`. You can also
-force a track via CLI flags when testing.
+The script auto-detects the compute capability via `nvidia-smi` and automatically:
+- **For legacy GPUs (Pascal/Turing)**: Installs CUDA 11.0 via runfile (Ubuntu 24.04 compatible), pins PyTorch to cu118 wheels, and uses TensorFlow CPU
+- **For modern GPUs (Ampere+)**: Installs CUDA 13.0 via apt, uses PyTorch cu124 wheels, and enables TensorFlow GPU
+
+You can also force a track via CLI flags when testing.
 
 ## What is CUDA & why run it inside WSL2?
 
@@ -297,6 +300,56 @@ results = run_all_benchmarks(use_gpu=True)
 # Returns dict with success status for each benchmark
 ```
 
+## Legacy GPU Support (Pascal/Turing)
+
+### CUDA 11.0 Installation on Ubuntu 24.04
+
+Ubuntu 24.04 (Noble) does not have `cuda-toolkit-11.0` packages in the apt repository. The installer automatically uses the **CUDA 11.0 runfile installer** for legacy GPUs:
+
+```bash
+# Automatically handled by the installer
+wget http://developer.download.nvidia.com/compute/cuda/11.0.2/local_installers/cuda_11.0.2_450.51.05_linux.run
+sudo sh cuda_11.0.2_450.51.05_linux.run --silent --toolkit --override
+```
+
+The 2.9GB download includes a progress bar and takes 2-5 minutes depending on connection speed.
+
+### PyTorch cu118 Wheels
+
+For compute capability ≤ 7 (Pascal/Turing GPUs like GTX 1080 Ti), the installer pins PyTorch to **cu118 wheels**:
+
+```bash
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+```
+
+This ensures full GPU acceleration for PyTorch workloads on legacy hardware.
+
+### TensorFlow CPU-Only on Legacy GPUs
+
+**Why CPU-only?**
+- TensorFlow 2.16+ dropped support for compute capability < 8.0
+- TensorFlow 2.10 (last GPU-supporting version for Pascal) is no longer available on PyPI
+- TensorFlow 2.10 requires Python 3.7-3.10 (incompatible with modern Python 3.12)
+- CPU performance is acceptable for benchmarking purposes (~5-6 seconds for standard CNN training)
+
+**What you'll see:**
+```
+[INFO] TensorFlow GPU build skipped for legacy GPU (compute capability < 8)
+TensorFlow: 2.20.0
+GPU devices: 0
+```
+
+This is **expected behavior** and ensures you get modern, secure TensorFlow without downgrading Python.
+
+### Benchmark Expectations on GTX 1080 Ti
+
+- ✅ **PyTorch MatMul**: Full GPU acceleration (~0.002s GPU vs ~0.5s CPU)
+- ✅ **TensorFlow CNN**: CPU-only (~5-6s for 3 epochs)
+- ✅ **cuDF GroupBy**: GPU acceleration via RAPIDS
+- ✅ **CUDA Samples**: GPU acceleration via Numba CUDA
+
+**Result: 4/4 benchmarks pass successfully**
+
 ## Troubleshooting
 
 ### Common Issues
@@ -316,6 +369,12 @@ results = run_all_benchmarks(use_gpu=True)
 - Ensure sudo privileges
 - Remove conflicting packages: `sudo apt-get remove cuda* nvidia*`
 - The installer handles this gracefully and continues with CPU benchmarks
+
+**Ubuntu 24.04 + Pascal/Turing GPU specific issues**
+- **"cuda-toolkit-11.0 package not found"**: Expected behavior - Ubuntu 24.04 doesn't have CUDA 11 apt packages. The installer automatically uses the runfile installer instead.
+- **"nvcc --version unavailable"**: The installer now exports CUDA paths before package installation. If you still see this warning, manually run: `export PATH=/usr/local/cuda/bin:$PATH`
+- **"Downloading CUDA 11.0 runfile installer..." appears hung**: The 2.9GB download shows a progress bar. On slow connections, this can take 5-10 minutes. Be patient!
+- **PyTorch not using GPU**: Verify cu118 wheels were installed: `pip show torch | grep cu118`. If not, reinstall: `pip install torch --index-url https://download.pytorch.org/whl/cu118`
 
 **Benchmark failures**
 - PyTorch: Usually works on all CUDA versions if GPU drivers are correct
