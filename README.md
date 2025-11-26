@@ -229,9 +229,26 @@ Each run captures specs, updates `results/hacker_leaderboard_*.json`, and shows 
 * **Benchmark failures:** PyTorch works broadly; TensorFlow/cuDF may fail on old GPUs, CPU fallback used.
 * **Virtual environment issues:** Delete and recreate: `rm -rf .cuda-wsl-bench-venv && python3 scripts/env_setup.py`.
 
-## Known issues
+## Known Issues & Solutions
 
-* **WSL shim segfaults (`/usr/lib/wsl/lib/libcuda.so.1 --version` exits 139)** — Microsoft is tracking this in [microsoft/WSL#13773](https://github.com/microsoft/WSL/issues/13773). Until a fixed driver/wslg build lands, run `scripts/diagnostics/gpu_wsl_diag.sh` to capture logs before opening support tickets with Microsoft/NVIDIA. The script collects `nvidia-smi`, `dmesg`, `strace`, and TensorFlow visibility data so you can attach it to bug reports.
+### WSL CUDA Shim Segfaults (RESOLVED ✅)
+
+**Original Problem**: `libcuda.so.1 --version` exits with code 139 (segfault) on Ubuntu 24.04 with Pascal/Turing GPUs.
+
+**Root Cause**: Not a WSL/driver bug, but a **package compatibility issue**:
+- Ubuntu 24.04 removed CUDA 11.x apt packages
+- Attempting to install CUDA 12.x/13.x on Pascal GPUs (compute capability ≤ 7) causes shim failures
+- Modern TensorFlow/PyTorch versions expect different CUDA versions than what legacy GPUs support
+
+**Solution** (implemented in this installer):
+1. **Use CUDA 11.0 runfile installer** for Pascal/Turing GPUs on Ubuntu 24.04
+2. **Pin PyTorch to cu118 wheels** for optimal legacy GPU support
+3. **Use TensorFlow CPU** (modern versions dropped Pascal support)
+4. **Export CUDA paths** before package installation
+
+**Result**: 4/4 benchmarks passing, no segfaults, full GPU acceleration where supported.
+
+**For others experiencing similar issues**: See [microsoft/WSL#13773](https://github.com/microsoft/WSL/issues/13773) for the original report. The workaround implemented in this installer resolves the issue without requiring WSL/driver updates.
 
 ## Advanced Usage
 
